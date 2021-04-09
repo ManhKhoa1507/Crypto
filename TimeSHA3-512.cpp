@@ -40,6 +40,7 @@ string sha3(string input)
 	hash3.Update(buffer, input.size());
 	hash3.Final(out);
 
+	// Get the prettier output
 	string output = PrettyOutput(out);
 	return output;
 }
