@@ -53,7 +53,7 @@ string DESHashing(string plaintext)
     return encoded;
 }
 
-double HashTime(string input)
+double CalHashTime(string input)
 {
     // Calculate the hash time of 1 round
     int start_s = clock();
@@ -66,14 +66,7 @@ double HashTime(string input)
     return etime;
 }
 
-void GetTheInput(string &input)
-{
-    // Get the input message
-    cout << "Please enter input message: ";
-    cin >> input;
-}
-
-double CalculateTotalTime(string plaintext)
+double CalTotalTime(string plaintext)
 {
     // Calculate total time of 10.000 rounds
     double total = 0;
@@ -81,16 +74,23 @@ double CalculateTotalTime(string plaintext)
 
     while (round < 10000)
     {
-        total = total + HashTime(plaintext);
+        total = total + CalHashTime(plaintext);
         round++;
     }
     return total;
 }
 
-void DisplayResult(string cipher, double total)
+void GetTheInput(string &input)
+{
+    // Get the input message
+    cout << "Please enter input message: ";
+    cin >> input;
+}
+
+void DisplayResult(string output, double total)
 {
     // Display the result (cipherText, total time of 10.000 rounds and Execution time)
-    cout << "DES output: " << cipher << endl;
+    cout << "DES output: " << output << endl;
     cout << "Total time for 10.000 rounds: " << total << " ms" << endl;
     cout << "Execution time: " << total / 10000 << " ms" << endl
          << endl;
@@ -102,7 +102,7 @@ int main()
     GetTheInput(input);
 
     string output = DESHashing(input);
-    double total = CalculateTotalTime(input);
+    double total = CalTotalTime(input);
 
     DisplayResult(output, total);
     return 0;

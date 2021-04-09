@@ -2,93 +2,97 @@
 //g++ -o TimeSHA3-512.exe TimeSHA3-512.cpp -DNDEBUG -g2 -O3 -D_WIN32_WINNT=0x0501 -pthread ./lib/libcryptopp.a
 #include <ctime>
 #include <string>
-
 #include <iostream>
+
 // Include cryptopp header files
 #include "./include/cryptopp/sha3.h"
 #include "./include/cryptopp/filters.h"
 #include "./include/cryptopp/hex.h"
 
+using CryptoPP::byte;
 using CryptoPP::SHA3_512;
 using namespace std;
-using CryptoPP::byte;
 
-double sha3(string input)
+string PrettyOutput(byte *out)
 {
-	int start_s = clock();
-	double etime;
-
-	CryptoPP::SHA3_512 hash3;
-	string in = input;
-	byte *buffer = (unsigned char *)malloc(in.size());
-	byte *out = (unsigned char *)malloc(hash3.DigestSize());
-
-	hash3.Restart();
-
-	memcpy(buffer, in.data(), in.size());
-
-	hash3.Update(buffer, in.size());
-	hash3.Final(out);
-
-	int stop_s = clock();
-
-	etime = (stop_s - start_s) / double(CLOCKS_PER_SEC) * 1000;
-
 	// Print hash output in hex form
+	string output;
 	CryptoPP::HexEncoder encoder;
-	std::string output;
 
 	encoder.Attach(new CryptoPP::StringSink(output));
 	encoder.Put(out, 64);
 	encoder.MessageEnd();
 
+	return output;
+}
+
+string sha3(string input)
+{
+	// Hash the message using the sha3-512
+	CryptoPP::SHA3_512 hash3;
+	byte *buffer = (unsigned char *)malloc(input.size());
+	byte *out = (unsigned char *)malloc(hash3.DigestSize());
+
+	hash3.Restart();
+
+	memcpy(buffer, input.data(), input.size());
+
+	hash3.Update(buffer, input.size());
+	hash3.Final(out);
+
+	string output = PrettyOutput(out);
+	return output;
+}
+
+double CalHashTime(string input)
+{
+	// Calculate the hash time of 1 round
+	int start_s = clock();
+	sha3(input);
+	int stop_s = clock();
+
+	double etime = (stop_s - start_s) / double(CLOCKS_PER_SEC) * 1000;
 	return etime;
+}
+
+double CalTotalTime(string input)
+{
+	// Calculate total time of 10000 rounds
+	double total = 0;
+	int a = 1;
+
+	while (a < 10000)
+	{
+		total = total + CalHashTime(input);
+		a = a + 1;
+	}
+	return total;
+}
+
+void GetInput(string &input)
+{
+	// Get the input
+	cout << "Please enter the input message: ";
+	cin >> input;
+}
+
+void DisplayResult(string output, double total)
+{
+	// Display result (cipherText, total time to hash 10000 rounds and Execution time)
+	cout << "DES output: " << output << endl;
+	cout << "Total time for 10.000 rounds: " << total << " ms" << endl;
+	cout << "Execution time: " << total / 10000 << " ms" << endl
+		 << endl;
 }
 
 int main()
 {
+	string input;
+	GetInput(input);
 
-	double result, total;
+	string output = sha3(input);
+	double total = CalTotalTime(input);
 
-	std::string input;
-	cout << "Please enter the input message: ";
-	cin >> input;
-
-	total = 0;
-	int a = 1;
-	
-	while (a < 10001)
-	{
-		total = total + sha3(input);
-		a = a + 1;
-	}
-	
-	result = total / 10000;
-	CryptoPP::SHA3_512 hash3;
-	
-	byte *buffer = (unsigned char *)malloc(input.size());
-	byte *out = (unsigned char *)malloc(hash3.DigestSize());
-	
-	hash3.Restart();
-	memcpy(buffer, input.data(), input.size());
-	
-	hash3.Update(buffer, input.size());
-	hash3.Final(out);
-	
-	CryptoPP::HexEncoder encoder;
-	std::string output;
-	
-	encoder.Attach(new CryptoPP::StringSink(output));
-	encoder.Put(out, 64);
-	encoder.MessageEnd();
-	std::string pause;
-	
-	cout << "Input size: " << input.size() << " bytes" << endl;
-	cout << "SHA3-512 output: " << output << endl;
-	cout << "Total time for 10.000 rounds: " << total << " ms" << endl;
-	cout << "Execution time: " << result << " ms" << endl
-		 << endl;
-	cout << "Do you like to quite program?" << endl;
-
-	cin >> pause;
+	DisplayResult(output, total);
+	return 0;
 }
