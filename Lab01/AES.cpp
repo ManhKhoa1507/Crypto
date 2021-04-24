@@ -53,6 +53,7 @@ void AESHashing()
 
     string encoded = "";
     StringSource ss2(message, true, new HexEncoder(new StringSink(encoded)));
+    
     cout << endl
          << message << endl;
     cout << encoded;
