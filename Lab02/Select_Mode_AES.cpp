@@ -345,7 +345,7 @@ void AES_ECB(string plain)
     try
     {
         cout << "plain text: " << plain << endl;
-        cipher = DecryptECB(cipher, key);
+        cipher = EncryptECB(plain, key);
     }
     catch (const CryptoPP::Exception &e)
     {
@@ -413,8 +413,7 @@ void AES_OFB(string plain)
 
 void GetInput(int &mode, string &plain)
 {
-    // Get the input
-    // Choose mode
+    // Choose the mode and get the message
     cout << "(1)CBC (2)CFB (3)ECB (4)OFB: ";
     cin >> mode;
     cin.ignore();
