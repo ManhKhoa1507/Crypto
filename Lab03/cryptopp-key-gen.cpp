@@ -1,6 +1,6 @@
 #include <iostream>
-using std::cout;
 using std::cerr;
+using std::cout;
 using std::endl;
 
 #include <string>
@@ -13,8 +13,8 @@ using std::runtime_error;
 using CryptoPP::ByteQueue;
 
 #include "cryptopp/files.h"
-using CryptoPP::FileSource;
 using CryptoPP::FileSink;
+using CryptoPP::FileSource;
 
 #include "cryptopp/dsa.h"
 using CryptoPP::DSA;
@@ -23,18 +23,18 @@ using CryptoPP::DSA;
 using CryptoPP::RSA;
 
 #include "cryptopp/base64.h"
-using CryptoPP::Base64Encoder;
 using CryptoPP::Base64Decoder;
+using CryptoPP::Base64Encoder;
 
 #include "cryptopp/cryptlib.h"
+using CryptoPP::BufferedTransformation;
 using CryptoPP::PrivateKey;
 using CryptoPP::PublicKey;
-using CryptoPP::BufferedTransformation;
 
 #include "cryptopp/osrng.h"
 using CryptoPP::AutoSeededRandomPool;
 
-void Save(const string& filename, const BufferedTransformation& bt)
+void Save(const string &filename, const BufferedTransformation &bt)
 {
 	FileSink file(filename.c_str());
 
@@ -42,7 +42,7 @@ void Save(const string& filename, const BufferedTransformation& bt)
 	file.MessageEnd();
 }
 
-void SavePrivateKey(const string& filename, const PrivateKey& key)
+void SavePrivateKey(const string &filename, const PrivateKey &key)
 {
 	ByteQueue queue;
 	key.Save(queue);
@@ -50,7 +50,7 @@ void SavePrivateKey(const string& filename, const PrivateKey& key)
 	Save(filename, queue);
 }
 
-void SavePublicKey(const string& filename, const PublicKey& key)
+void SavePublicKey(const string &filename, const PublicKey &key)
 {
 	ByteQueue queue;
 	key.Save(queue);
@@ -58,7 +58,7 @@ void SavePublicKey(const string& filename, const PublicKey& key)
 	Save(filename, queue);
 }
 
-void SaveBase64(const string& filename, const BufferedTransformation& bt)
+void SaveBase64(const string &filename, const BufferedTransformation &bt)
 {
 	Base64Encoder encoder;
 
@@ -68,7 +68,7 @@ void SaveBase64(const string& filename, const BufferedTransformation& bt)
 	Save(filename, encoder);
 }
 
-void SaveBase64PrivateKey(const string& filename, const PrivateKey& key)
+void SaveBase64PrivateKey(const string &filename, const PrivateKey &key)
 {
 	ByteQueue queue;
 	key.Save(queue);
@@ -76,7 +76,7 @@ void SaveBase64PrivateKey(const string& filename, const PrivateKey& key)
 	SaveBase64(filename, queue);
 }
 
-void SaveBase64PublicKey(const string& filename, const PublicKey& key)
+void SaveBase64PublicKey(const string &filename, const PublicKey &key)
 {
 	ByteQueue queue;
 	key.Save(queue);
@@ -84,8 +84,7 @@ void SaveBase64PublicKey(const string& filename, const PublicKey& key)
 	SaveBase64(filename, queue);
 }
 
-
-void Load(const string& filename, BufferedTransformation& bt)
+void Load(const string &filename, BufferedTransformation &bt)
 {
 	FileSource file(filename.c_str(), true /*pumpAll*/);
 
@@ -93,47 +92,54 @@ void Load(const string& filename, BufferedTransformation& bt)
 	bt.MessageEnd();
 }
 
-
-void LoadPrivateKey(const string& filename, PrivateKey& key)
+void LoadPrivateKey(const string &filename, PrivateKey &key)
 {
 	ByteQueue queue;
 
 	Load(filename, queue);
-	key.Load(queue);	
+	key.Load(queue);
 }
 
-void LoadPublicKey(const string& filename, PublicKey& key)
+void LoadPublicKey(const string &filename, PublicKey &key)
 {
 	ByteQueue queue;
 
 	Load(filename, queue);
-	key.Load(queue);	
+	key.Load(queue);
 }
 
-void LoadBase64PrivateKey(const string& filename, PrivateKey& key)
+void LoadBase64PrivateKey(const string &filename, PrivateKey &key)
 {
 	throw runtime_error("Not implemented");
 }
 
-void LoadBase64PublicKey(const string& filename, PublicKey& key)
+void LoadBase64PublicKey(const string &filename, PublicKey &key)
 {
 	throw runtime_error("Not implemented");
 }
 
-void LoadBase64(const string& filename, BufferedTransformation& bt)
+void LoadBase64(const string &filename, BufferedTransformation &bt)
 {
 	throw runtime_error("Not implemented");
 }
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
 	std::ios_base::sync_with_stdio(false);
+
+#ifdef __linux__
+	setlocale(LC_ALL, "");
+#elif _WIN32
+	_setmode(_fileno(stdin), _O_U16TEXT);
+	_setmode(_fileno(stdout), _O_U16TEXT);
+#else
+#endif
 
 	AutoSeededRandomPool rnd;
 
 	try
 	{
-		// http://www.cryptopp.com/docs/ref/rsa_8h.html
+
 		RSA::PrivateKey rsaPrivate;
 		rsaPrivate.GenerateRandomWithKeySize(rnd, 2048);
 
@@ -160,9 +166,9 @@ int main(int argc, char** argv)
 		r1.Validate(rnd, 3);
 		r2.Validate(rnd, 3);
 
-		if(r1.GetModulus() != r2.GetModulus() ||
-		   r1.GetPublicExponent() != r2.GetPublicExponent() ||
-		   r1.GetPrivateExponent() != r2.GetPrivateExponent())
+		if (r1.GetModulus() != r2.GetModulus() ||
+			r1.GetPublicExponent() != r2.GetPublicExponent() ||
+			r1.GetPrivateExponent() != r2.GetPrivateExponent())
 		{
 			throw runtime_error("key data did not round trip");
 		}
@@ -170,13 +176,13 @@ int main(int argc, char** argv)
 		cout << "Successfully generated and saved RSA and DSA keys" << endl;
 	}
 
-	catch(CryptoPP::Exception& e)
+	catch (CryptoPP::Exception &e)
 	{
 		cerr << e.what() << endl;
 		return -2;
 	}
 
-	catch(std::exception& e)
+	catch (std::exception &e)
 	{
 		cerr << e.what() << endl;
 		return -1;
