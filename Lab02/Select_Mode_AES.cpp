@@ -64,300 +64,20 @@ using CryptoPP::SecByteBlock;
 using std::wstring;
 
 // convert UTF-8 string to wstring
-std::wstring Utf8ToWstring(const std::string &str)
+std::wstring utf8_to_wstring(const std::string &str)
 {
     std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
     return myconv.from_bytes(str);
 }
 
 // convert wstring to UTF-8 string
-std::string WstringToUtf8(const std::wstring &str)
+std::string wstring_to_utf8(const std::wstring &str)
 {
     std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
     return myconv.to_bytes(str);
 }
 
-string EncryptCBC(string plain, byte key[], byte iv[])
-{
-    string cipher;
-    int keyLength = AES::DEFAULT_KEYLENGTH;
-    CBC_Mode<AES>::Encryption e;
-
-    e.SetKeyWithIV(key, keyLength, iv);
-
-    // The StreamTransformationFilter removes
-    // padding as required.
-    // StringSource
-    // StreamTransformationFilter
-    StringSource s(plain, true,
-                   new StreamTransformationFilter(e,
-                                                  new StringSink(cipher)));
-    return cipher;
-}
-
-string DecryptCBC(string cipher, byte key[], byte iv[])
-{
-    string plain;
-    CBC_Mode<AES>::Decryption d;
-    int keyLength = AES::DEFAULT_KEYLENGTH;
-
-    d.SetKeyWithIV(key, keyLength, iv);
-
-    // The StreamTransformationFilter removes
-    //  padding as required.
-    // StreamTransformationFilter
-    // StringSource
-    StringSource s(cipher, true,
-                   new StreamTransformationFilter(d,
-                                                  new StringSink(plain)));
-
-    return plain;
-}
-
-string EncryptCFB(string plain, byte key[], byte iv[])
-{
-    string cipher;
-    int keyLength = AES::DEFAULT_KEYLENGTH;
-    CFB_Mode<AES>::Encryption e;
-
-    e.SetKeyWithIV(key, keyLength, iv);
-
-    // The StreamTransformationFilter removes
-    // padding as required.
-    // StringSource
-    // StreamTransformationFilter
-    StringSource s(plain, true,
-                   new StreamTransformationFilter(e,
-                                                  new StringSink(cipher)));
-    return cipher;
-}
-
-string DecryptCFB(string cipher, byte key[], byte iv[])
-{
-    string plain;
-    CFB_Mode<AES>::Decryption d;
-    int keyLength = AES::DEFAULT_KEYLENGTH;
-
-    d.SetKeyWithIV(key, keyLength, iv);
-
-    // The StreamTransformationFilter removes
-    //  padding as required.
-    // StreamTransformationFilter
-    // StringSource
-    StringSource s(cipher, true,
-                   new StreamTransformationFilter(d,
-                                                  new StringSink(plain)));
-
-    return plain;
-}
-
-string EncryptECB(string plain, byte key[])
-{
-    string cipher;
-    int keyLength = AES::DEFAULT_KEYLENGTH;
-    ECB_Mode<AES>::Encryption e;
-
-    e.SetKey(key, keyLength);
-
-    // The StreamTransformationFilter removes
-    // padding as required.
-    // StringSource
-    // StreamTransformationFilter
-    StringSource s(plain, true,
-                   new StreamTransformationFilter(e,
-                                                  new StringSink(cipher)));
-    return cipher;
-}
-
-string DecryptECB(string cipher, byte key[])
-{
-    string plain;
-    ECB_Mode<AES>::Decryption d;
-    int keyLength = AES::DEFAULT_KEYLENGTH;
-
-    d.SetKey(key, keyLength);
-
-    // The StreamTransformationFilter removes
-    //  padding as required.
-    // StreamTransformationFilter
-    // StringSource
-    StringSource s(cipher, true,
-                   new StreamTransformationFilter(d,
-                                                  new StringSink(plain)));
-
-    return plain;
-}
-
-string EncryptOFB(string plain, byte key[], byte iv[])
-{
-    string cipher;
-    int keyLength = AES::DEFAULT_KEYLENGTH;
-    OFB_Mode<AES>::Encryption e;
-
-    e.SetKeyWithIV(key, keyLength, iv);
-
-    // The StreamTransformationFilter removes
-    // padding as required.
-    // StringSource
-    // StreamTransformationFilter
-    StringSource s(plain, true,
-                   new StreamTransformationFilter(e,
-                                                  new StringSink(cipher)));
-    return cipher;
-}
-
-string EncryptCTR(string plain, byte key[], byte iv[])
-{
-    string cipher;
-    CTR_Mode<AES>::Encryption e;
-
-    int keyLength = AES::DEFAULT_KEYLENGTH;
-    e.SetKeyWithIV(key, keyLength, iv);
-
-    StringSource(plain, true,
-                 new StreamTransformationFilter(e,
-                                                new StringSink(cipher)) // StreamTransformationFilter
-    );
-    return cipher;
-}
-
-string EncryptXTS(string plain, byte key[], byte iv[])
-{
-    string cipher;
-    XTS_Mode<AES>::Encryption enc;
-
-    int keyLength = 64;
-    enc.SetKeyWithIV(key, keyLength, iv);
-
-#if 0
-        std::cout << "key length: " << enc.DefaultKeyLength() << std::endl;
-        std::cout << "key length (min): " << enc.MinKeyLength() << std::endl;
-        std::cout << "key length (max): " << enc.MaxKeyLength() << std::endl;
-        std::cout << "block size: " << enc.BlockSize() << std::endl;
-#endif
-
-    StringSource ss(plain, true,
-                    new StreamTransformationFilter(enc,
-                                                   new StringSink(cipher),
-                                                   StreamTransformationFilter::NO_PADDING) // StreamTransformationFilter
-    );                                                                                     // StringSource
-    return cipher;
-}
-
-string EncryptCCM(string plain, byte key[], byte iv[])
-{
-    string cipher;
-    CCM<AES, 8>::Encryption e;
-    e.SetKeyWithIV(key, sizeof(key), iv, sizeof(iv));
-    e.SpecifyDataLengths(0, plain.size(), 0);
-
-    StringSource(plain, true,
-                 new AuthenticatedEncryptionFilter(e,
-                                                   new StringSink(cipher)));
-    return cipher;
-}
-
-string EncryptGCM(string plain, byte key[], byte iv[])
-{
-    string cipher;
-    GCM<AES>::Encryption e;
-    e.SetKeyWithIV(key, sizeof(key), iv, sizeof(iv));
-
-    // The StreamTransformationFilter adds padding
-    //  as required. GCM and CBC Mode must be padded
-    //  to the block size of the cipher.
-    StringSource(plain, true,
-                 new AuthenticatedEncryptionFilter(e,
-                                                   new StringSink(cipher)) // StreamTransformationFilter
-    );
-    return cipher;
-}
-
-string DecryptOFB(string cipher, byte key[], byte iv[])
-{
-    string plain;
-    OFB_Mode<AES>::Decryption d;
-    int keyLength = AES::DEFAULT_KEYLENGTH;
-
-    d.SetKeyWithIV(key, keyLength, iv);
-
-    // The StreamTransformationFilter removes
-    //  padding as required.
-    // StreamTransformationFilter
-    // StringSource
-    StringSource s(cipher, true,
-                   new StreamTransformationFilter(d,
-                                                  new StringSink(plain)));
-
-    return plain;
-}
-
-string DecryptCTR(string cipher, byte key[], byte iv[])
-{
-    string recovered;
-    CTR_Mode<AES>::Decryption d;
-
-    int keyLength = AES::DEFAULT_KEYLENGTH;
-    d.SetKeyWithIV(key, keyLength, iv);
-
-    StringSource s(cipher, true,
-                   new StreamTransformationFilter(d,
-                                                  new StringSink(recovered)));
-    return recovered;
-}
-
-string DecryptXTS(string cipher, byte key[], byte iv[])
-{
-    string recovered;
-    XTS_Mode<AES>::Decryption dec;
-
-    int keyLength = 64;
-    dec.SetKeyWithIV(key, keyLength, iv);
-
-    // The StreamTransformationFilter removes
-    //  padding as requiredec.
-    StringSource ss(cipher, true,
-                    new StreamTransformationFilter(dec,
-                                                   new StringSink(recovered),
-                                                   StreamTransformationFilter::NO_PADDING) // StreamTransformationFilter
-    );
-    return recovered;
-}
-
-string DecryptCCM(string cipher, byte key[], byte iv[])
-{
-    string recovered;
-    CCM<AES, 8>::Decryption d;
-    d.SetKeyWithIV(key, sizeof(key), iv, sizeof(iv));
-    d.SpecifyDataLengths(0, cipher.size() - 8, 0);
-
-    AuthenticatedDecryptionFilter df(d,
-                                     new StringSink(recovered));
-
-    StringSource(cipher, true,
-                 new Redirector(df));
-
-    bool b = df.GetLastResult();
-    assert(true == b);
-    return recovered;
-}
-
-string DecryptGCM(string cipher, byte key[], byte iv[])
-{
-    string recovered;
-    GCM<AES>::Decryption d;
-    d.SetKeyWithIV(key, sizeof(key), iv, sizeof(iv));
-
-    // The StreamTransformationFilter removes
-    //  padding as required.
-    StringSource s(cipher, true,
-                   new AuthenticatedDecryptionFilter(d,
-                                                     new StringSink(recovered)) // StreamTransformationFilter
-    );
-    return recovered;
-}
-
-string PrettyPrintByte(byte byteList[])
+wstring PrettyPrintByte(byte byteList[])
 {
     // Pretty print a byte list
     string encoded = "";
@@ -366,11 +86,11 @@ string PrettyPrintByte(byte byteList[])
     StringSource(byteList, sizeof(byteList), true,
                  new HexEncoder(
                      new StringSink(encoded)));
-
-    return encoded;
+    wstring encoded1(encoded.begin(), encoded.end());
+    return encoded1;
 }
 
-string PrettyPrintString(string str)
+wstring PrettyPrintString(string str)
 {
     // Pretty print a string
     string encoded = "";
@@ -379,8 +99,9 @@ string PrettyPrintString(string str)
     StringSource(str, true,
                  new HexEncoder(
                      new StringSink(encoded)));
+    wstring encoded1(encoded.begin(), encoded.end());
 
-    return encoded;
+    return encoded1;
 }
 
 void printException(CryptoPP::Exception e)
@@ -396,25 +117,47 @@ void CreateRandomKeyIV(CryptoPP::byte key[], CryptoPP::byte iv[])
     prng.GenerateBlock(iv, sizeof(iv));
 }
 
-void AES_CBC(string plain, byte key[], byte iv[])
+void AES_CBC(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
 {
+    string plain = wstring_to_utf8(wPlain);
     string cipher, encoded, recovered;
-
+    wstring encodedRecovered(encoded.begin(), encoded.end());
     // Pretty print key
-    string prettyKey = PrettyPrintByte(key);
-    cout << "key: " << prettyKey << endl;
+    encoded.clear();
+    StringSource(key, keyLength, true,
+                 new HexEncoder(
+                     new StringSink(encoded)) // HexEncoder
+    );                                        // StringSource
+    wstring encodedKey(encoded.begin(), encoded.end());
+    wcout << "key: " << encodedKey << endl;
 
     // Pretty print iv
-    string prettyIV = PrettyPrintByte(iv);
-    cout << "iv: " << prettyIV << endl;
+    encoded.clear();
+    StringSource(iv, ivLength, true,
+                 new HexEncoder(
+                     new StringSink(encoded)) // HexEncoder
+    );                                        // StringSource
+    wstring encodedIV(encoded.begin(), encoded.end());
+    wcout << "iv: " << encodedIV << endl;
 
     try
     {
-        cout << "plain text: " << plain << endl;
-        cipher = EncryptCBC(plain, key, iv);
+        wcout << "plain text: " << wPlain << endl;
+
+        CBC_Mode<AES>::Encryption e;
+        e.SetKeyWithIV(key, keyLength, iv);
+
+        // The StreamTransformationFilter removes
+        //  padding as required.
+        StringSource s(plain, true,
+                       new StreamTransformationFilter(e,
+                                                      new StringSink(cipher)) // StreamTransformationFilter
+        );                                                                    // StringSource
 
 #if 0
-		StreamTra  std::cout << "plain text: " << plain << std::endl;essageEnd();
+		StreamTransformationFilter filter(e);
+		filter.Put((const byte*)plain.data(), plain.size());
+		filter.MessageEnd();
 
 		const size_t ret = filter.MaxRetrievable();
 		cipher.resize(ret);
@@ -423,16 +166,30 @@ void AES_CBC(string plain, byte key[], byte iv[])
     }
     catch (const CryptoPP::Exception &e)
     {
-        printException(e);
+        cerr << e.what() << endl;
+        exit(1);
     }
 
-    // Pretty print cipher text
-    string prettyCipher = PrettyPrintString(cipher);
-    cout << "cipher text: " << prettyCipher << endl;
+    // Pretty print
+    encoded.clear();
+    StringSource(cipher, true,
+                 new HexEncoder(
+                     new StringSink(encoded)) // HexEncoder
+    );                                        // StringSource
+    wstring encodedCipher(encoded.begin(), encoded.end());
+    wcout << "cipher text: " << encodedCipher << endl;
 
     try
     {
-        recovered = DecryptCBC(cipher, key, iv);
+        CBC_Mode<AES>::Decryption d;
+        d.SetKeyWithIV(key, keyLength, iv);
+
+        // The StreamTransformationFilter removes
+        //  padding as required.
+        StringSource s(cipher, true,
+                       new StreamTransformationFilter(d,
+                                                      new StringSink(recovered)) // StreamTransformationFilter
+        );                                                                       // StringSource
 
 #if 0
 		StreamTransformationFilter filter(d);
@@ -443,225 +200,391 @@ void AES_CBC(string plain, byte key[], byte iv[])
 		recovered.resize(ret);
 		filter.Get((byte*)recovered.data(), recovered.size());
 #endif
-
-        cout << "recovered text: " << recovered << endl;
+        wstring encodedRecovered = utf8_to_wstring(recovered);
+        wcout << "recovered text: " << encodedRecovered << endl;
     }
     catch (const CryptoPP::Exception &e)
     {
-        printException(e);
+        cerr << e.what() << endl;
+        exit(1);
     }
 }
 
-void AES_CFB(string plain,byte key[], byte iv[])
+void AES_CFB(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
 {
-
-#ifdef __linux__
-    setlocale(LC_ALL, "");
-#elif _WIN32
-    _setmode(_fileno(stdin), _O_U16TEXT);
-    _setmode(_fileno(stdout), _O_U16TEXT);
-#else
-#endif
-
+    string plain = wstring_to_utf8(wPlain);
     string cipher, encoded, recovered;
 
     // Pretty print key
-    string prettyKey = PrettyPrintByte(key);
-    cout << "key: " << prettyKey << endl;
+    encoded.clear();
+    StringSource(key, keyLength, true,
+                 new HexEncoder(
+                     new StringSink(encoded)) // HexEncoder
+    );                                        // StringSource
+
+    wstring encodedKey(encoded.begin(), encoded.end());
+    wcout << "key: " << encodedKey << endl;
 
     // Pretty print iv
-    string prettyIV = PrettyPrintByte(iv);
-    cout << "iv: " << prettyIV << endl;
+    encoded.clear();
+    StringSource(iv, ivLength, true,
+                 new HexEncoder(
+                     new StringSink(encoded)) // HexEncoder
+    );                                        // StringSource
+    wstring encodedIV(encoded.begin(), encoded.end());
+    wcout << "iv: " << encodedIV << endl;
 
     try
     {
-        cout << "plain text: " << plain << endl;
-        cipher = EncryptCFB(plain, key, iv);
+        wcout << "plain text: " << wPlain << endl;
+
+        CFB_Mode<AES>::Encryption e;
+        e.SetKeyWithIV(key, keyLength, iv);
+
+        // CFB mode must not use padding. Specifying
+        //  a scheme will result in an exception
+        StringSource(plain, true,
+                     new StreamTransformationFilter(e,
+                                                    new StringSink(cipher)) // StreamTransformationFilter
+        );                                                                  // StringSource
     }
     catch (const CryptoPP::Exception &e)
     {
-        printException(e);
+        cerr << e.what() << endl;
+        exit(1);
     }
 
-    // Pretty print cipher
-    string prettyCipher = PrettyPrintString(cipher);
-    cout << "cipher text: " << prettyCipher << endl;
+    // Pretty print
+    encoded.clear();
+    StringSource(cipher, true,
+                 new HexEncoder(
+                     new StringSink(encoded)) // HexEncoder
+    );                                        // StringSource
+    wstring encodedCipher(encoded.begin(), encoded.end());
+    wcout << "cipher text: " << encodedCipher << endl;
 
     try
     {
-        recovered = DecryptCFB(cipher, key, iv);
-        cout << "recovered text: " << recovered << endl;
+        CFB_Mode<AES>::Decryption d;
+        d.SetKeyWithIV(key, keyLength, iv);
+
+        // The StreamTransformationFilter removes
+        //  padding as required.
+        StringSource s(cipher, true,
+                       new StreamTransformationFilter(d,
+                                                      new StringSink(recovered)) // StreamTransformationFilter
+        );                                                                       // StringSource
+
+        wstring encodedRecovered = utf8_to_wstring(recovered);
+        wcout << "recovered text: " << encodedRecovered << endl;
     }
     catch (const CryptoPP::Exception &e)
     {
-        printException(e);
+        cerr << e.what() << endl;
+        exit(1);
     }
 }
 
-void AES_ECB(string plain, byte key[])
+void AES_ECB(wstring wPlain, byte key[], int keyLength)
 {
-
+    string plain = wstring_to_utf8(wPlain);
     string cipher, encoded, recovered;
 
     // Pretty print key
-    string prettyKey = PrettyPrintByte(key);
-    cout << "key: " << prettyKey << endl;
+    encoded.clear();
+    StringSource(key, keyLength, true,
+                 new HexEncoder(
+                     new StringSink(encoded)) // HexEncoder
+    );                                        // StringSource
+    wstring encodedKey(encoded.begin(), encoded.end());
+    wcout << "key: " << encodedKey << endl;
 
     try
     {
-        cout << "plain text: " << plain << endl;
-        cipher = EncryptECB(plain, key);
+        wcout << "plain text: " << wPlain << endl;
+
+        ECB_Mode<AES>::Encryption e;
+        e.SetKey(key, keyLength);
+
+        // The StreamTransformationFilter adds padding
+        //  as required. ECB and CBC Mode must be padded
+        //  to the block size of the cipher.
+        StringSource(plain, true,
+                     new StreamTransformationFilter(e,
+                                                    new StringSink(cipher)) // StreamTransformationFilter
+        );                                                                  // StringSource
     }
     catch (const CryptoPP::Exception &e)
     {
-        printException(e);
+        cerr << e.what() << endl;
+        exit(1);
     }
 
-    string prettyCipher = PrettyPrintString(cipher);
-    cout << "cipher text: " << prettyCipher << endl;
+    // Pretty print
+    encoded.clear();
+    StringSource(cipher, true,
+                 new HexEncoder(
+                     new StringSink(encoded)) // HexEncoder
+    );                                        // StringSource
+    wstring encodedCipher(encoded.begin(), encoded.end());
+    wcout << "cipher text: " << encodedCipher << endl;
 
     try
     {
-        recovered = DecryptECB(cipher, key);
-        cout << "recovered text: " << recovered << endl;
+        ECB_Mode<AES>::Decryption d;
+        d.SetKey(key, keyLength);
+
+        // The StreamTransformationFilter removes
+        //  padding as required.
+        StringSource s(cipher, true,
+                       new StreamTransformationFilter(d,
+                                                      new StringSink(recovered)) // StreamTransformationFilter
+        );                                                                       // StringSource
+        wstring encodedRecovered = utf8_to_wstring(recovered);
+        wcout << "recovered text: " << encodedRecovered << endl;
     }
     catch (const CryptoPP::Exception &e)
     {
-        printException(e);
+        cerr << e.what() << endl;
+        exit(1);
     }
 }
 
-void AES_OFB(string plain, byte key[], byte iv[])
+void AES_OFB(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
 {
-
+    string plain = wstring_to_utf8(wPlain);
     string cipher, encoded, recovered;
 
     // Pretty print key
-    string prettyKey = PrettyPrintByte(key);
-    cout << "key: " << prettyKey << endl;
+    encoded.clear();
+    StringSource(key, keyLength, true,
+                 new HexEncoder(
+                     new StringSink(encoded)) // HexEncoder
+    );                                        // StringSource
+    wstring encodedKey(encoded.begin(), encoded.end());
+    wcout << "key: " << encodedKey << endl;
 
     // Pretty print iv
-    string prettyIV = PrettyPrintByte(iv);
-    cout << "iv: " << prettyIV << endl;
+    encoded.clear();
+    StringSource(iv, ivLength, true,
+                 new HexEncoder(
+                     new StringSink(encoded)) // HexEncoder
+    );                                        // StringSource
+    wstring encodedIV(encoded.begin(), encoded.end());
+    wcout << "iv: " << encodedIV << endl;
 
     try
     {
-        cout << "plain text: " << plain << endl;
-        cipher = EncryptOFB(plain, key, iv);
+        wcout << "plain text: " << wPlain << endl;
+
+        OFB_Mode<AES>::Encryption e;
+        e.SetKeyWithIV(key, keyLength, iv);
+
+        // OFB mode must not use padding. Specifying
+        //  a scheme will result in an exception
+        StringSource(plain, true,
+                     new StreamTransformationFilter(e,
+                                                    new StringSink(cipher)) // StreamTransformationFilter
+        );                                                                  // StringSource
     }
     catch (const CryptoPP::Exception &e)
     {
-        printException(e);
+        cerr << e.what() << endl;
+        exit(1);
     }
 
-    // Pretty print cipher
-    string prettyCipher = PrettyPrintString(cipher);
-    cout << "cipher: " << prettyCipher << endl;
+    // Pretty print
+    encoded.clear();
+    StringSource(cipher, true,
+                 new HexEncoder(
+                     new StringSink(encoded)) // HexEncoder
+    );                                        // StringSource
+    wstring encodedCipher(encoded.begin(), encoded.end());
+    wcout << "cipher text: " << encodedCipher << endl;
 
     try
     {
-        recovered = DecryptOFB(cipher, key, iv);
-        cout << "recovered text: " << recovered << endl;
+        OFB_Mode<AES>::Decryption d;
+        d.SetKeyWithIV(key, sizeof(key), iv);
+
+        // The StreamTransformationFilter removes
+        //  padding as required.
+        StringSource s(cipher, true,
+                       new StreamTransformationFilter(d,
+                                                      new StringSink(recovered)) // StreamTransformationFilter
+        );                                                                       // StringSource
+        wstring encodedRecovered = utf8_to_wstring(recovered);
+        wcout << "recovered text: " << encodedRecovered << endl;
     }
     catch (const CryptoPP::Exception &e)
     {
-        printException(e);
+        cerr << e.what() << endl;
+        exit(1);
     }
 }
 
-void AES_CTR(string plain, byte key[], byte iv[])
+void AES_CTR(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
 {
+    string plain = wstring_to_utf8(wPlain);
     string cipher, encoded, recovered;
 
     // Pretty print key
-    string prettyKey = PrettyPrintByte(key);
-    cout << "key: " << prettyKey << endl;
+    encoded.clear();
+    StringSource(key, keyLength, true,
+                 new HexEncoder(
+                     new StringSink(encoded)) // HexEncoder
+    );                                        // StringSource
+    wstring encodedKey(encoded.begin(), encoded.end());
+    wcout << "key: " << encodedKey << endl;
 
     // Pretty print iv
-    string prettyIV = PrettyPrintByte(iv);
-    cout << "iv: " << prettyIV << endl;
+    encoded.clear();
+    StringSource(iv, ivLength, true,
+                 new HexEncoder(
+                     new StringSink(encoded)) // HexEncoder
+    );                                        // StringSource
+    wstring encodedIV(encoded.begin(), encoded.end());
+    wcout << "iv: " << encodedIV << endl;
 
     try
     {
-        cout << "plain text: " << plain << endl;
-        cipher = EncryptCTR(plain, key, iv);
+        wcout << "plain text: " << wPlain << endl;
+
+        CTR_Mode<AES>::Encryption e;
+        e.SetKeyWithIV(key, keyLength, iv);
+
+        // The StreamTransformationFilter adds padding
+        //  as required. ECB and CBC Mode must be padded
+        //  to the block size of the cipher.
+        StringSource(plain, true,
+                     new StreamTransformationFilter(e,
+                                                    new StringSink(cipher)) // StreamTransformationFilter
+        );                                                                  // StringSource
     }
     catch (const CryptoPP::Exception &e)
     {
-        printException(e);
+        cerr << e.what() << endl;
+        exit(1);
     }
 
-    string prettyCipher = PrettyPrintString(cipher);
-    cout << "cipher: " << prettyCipher << endl;
+    // Pretty print
+    encoded.clear();
+    StringSource(cipher, true,
+                 new HexEncoder(
+                     new StringSink(encoded)) // HexEncoder
+    );                                        // StringSource
+    wstring encodedCipher(encoded.begin(), encoded.end());
+    wcout << "cipher text: " << encodedCipher << endl;
 
     try
     {
-        recovered = DecryptCTR(cipher, key, iv);
-        cout << "recovered text: " << recovered << endl;
-    }
+        CTR_Mode<AES>::Decryption d;
+        d.SetKeyWithIV(key, sizeof(key), iv);
 
+        // The StreamTransformationFilter removes
+        //  padding as required.
+        StringSource s(cipher, true,
+                       new StreamTransformationFilter(d,
+                                                      new StringSink(recovered)) // StreamTransformationFilter
+        );                                                                       // StringSource
+        wstring encodedRecovered = utf8_to_wstring(recovered);
+        wcout << "recovered text: " << encodedRecovered << endl;
+    }
     catch (const CryptoPP::Exception &e)
     {
-        printException(e);
+        cerr << e.what() << endl;
+        exit(1);
     }
 }
 
-void AES_XTS(string plain)
+void AES_XTS(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
 {
     using namespace CryptoPP;
 
-    AutoSeededRandomPool prng;
-
-    SecByteBlock key(32), iv(16);
-    prng.GenerateBlock(key, (key.size()));
-    prng.GenerateBlock(iv, iv.size());
-
+    string plain = wstring_to_utf8(wPlain);
     std::string cipher, encoded, recovered;
 
     try
     {
-        std::cout << "plain text: " << plain << std::endl;
-        cipher = EncryptXTS(plain, key, iv);
-    }
+        XTS_Mode<AES>::Encryption enc;
+        enc.SetKeyWithIV(key, keyLength, iv);
 
-    catch (const CryptoPP::Exception &e)
+#if 0
+        std::cout << "key length: " << enc.DefaultKeyLength() << std::endl;
+        std::cout << "key length (min): " << enc.MinKeyLength() << std::endl;
+        std::cout << "key length (max): " << enc.MaxKeyLength() << std::endl;
+        std::cout << "block size: " << enc.BlockSize() << std::endl;
+#endif
+
+        // The StreamTransformationFilter adds padding
+        //  as requiredec. ECB and XTS Mode must be padded
+        //  to the block size of the cipher.
+        StringSource ss(plain, true,
+                        new StreamTransformationFilter(enc,
+                                                       new StringSink(cipher),
+                                                       StreamTransformationFilter::NO_PADDING) // StreamTransformationFilter
+        );                                                                                     // StringSource
+        std::wcout << "plain text: " << wPlain << std::endl;
+    }
+    catch (const CryptoPP::Exception &ex)
     {
-        printException(e);
+        std::cerr << ex.what() << std::endl;
+        exit(1);
     }
 
-    // Pretty print key
-    string prettyKey = PrettyPrintByte(key);
-    cout << "key: " << prettyKey << endl;
+    encoded.clear();
+    StringSource ss1(key, keyLength, true,
+                     new HexEncoder(
+                         new StringSink(encoded)) // HexEncoder
+    );                                            // StringSource
+    wstring encodedKey(encoded.begin(), encoded.end());
+    std::wcout << "key: " << encodedKey << std::endl;
 
-    // Pretty print iv
-    string prettyIV = PrettyPrintByte(iv);
-    cout << "iv: " << prettyIV << endl;
+    encoded.clear();
+    StringSource ss2(iv, ivLength, true,
+                     new HexEncoder(
+                         new StringSink(encoded)) // HexEncoder
+    );                                            // StringSource
+    wstring encodedIV(encoded.begin(), encoded.end());
+    std::wcout << " iv: " << encodedIV << std::endl;
 
-    string prettyCipher = PrettyPrintString(cipher);
-    cout << "cipher: " << prettyCipher << endl;
+    // Pretty print cipher text
+    encoded.clear();
+    StringSource ss3(cipher, true,
+                     new HexEncoder(
+                         new StringSink(encoded)) // HexEncoder
+    );                                            // StringSource
+    wstring encodedCipher(encoded.begin(), encoded.end());
+    std::wcout << "cipher text: " << encodedCipher << std::endl;
 
     try
     {
         XTS_Mode<AES>::Decryption dec;
-        dec.SetKeyWithIV(key, key.size(), iv);
+        dec.SetKeyWithIV(key, keyLength, iv);
 
-        recovered = DecryptXTS(cipher, key, iv); // StringSource
-        std::cout << "recovered text: " << recovered << std::endl;
+        // The StreamTransformationFilter removes
+        //  padding as requiredec.
+        StringSource ss(cipher, true,
+                        new StreamTransformationFilter(dec,
+                                                       new StringSink(recovered),
+                                                       StreamTransformationFilter::NO_PADDING) // StreamTransformationFilter
+        );
+
+        // StringSource
+        wstring encodedRecovered = utf8_to_wstring(recovered);
+        wcout << "recovered text: " << encodedRecovered << endl;
     }
-
-    catch (const CryptoPP::Exception &e)
+    catch (const CryptoPP::Exception &ex)
     {
-        printException(e);
+        std::cerr << ex.what() << std::endl;
+        exit(1);
     }
 }
 
-void AES_CCM(string plain, byte key[], byte iv[])
+void AES_CCM(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
 {
-    AutoSeededRandomPool prng;
+    string plain = wstring_to_utf8(wPlain);
 
-    // { 7, 8, 9, 10, 11, 12, 13 }
-
-    // { 4, 6, 8, 10, 12, 14, 16 }
     const int TAG_SIZE = 8;
 
     // Encrypted, with Tag
@@ -670,109 +593,165 @@ void AES_CCM(string plain, byte key[], byte iv[])
     // Recovered
     string recovered;
 
-    // Pretty print key
-    string prettyKey = PrettyPrintByte(key);
-    cout << "key: " << prettyKey << endl;
+    // Pretty print
+    encoded.clear();
+    StringSource(key, keyLength, true,
+                 new HexEncoder(
+                     new StringSink(encoded)) // HexEncoder
+    );                                        // StringSource
+    wstring encodedKey(encoded.begin(), encoded.end());
+    wcout << "key: " << encodedKey << endl;
 
-    // Pretty print iv
-    string prettyIV = PrettyPrintByte(iv);
-    cout << "iv: " << prettyIV << endl;
+    // Pretty print
+    encoded.clear();
+    StringSource(iv, ivLength, true,
+                 new HexEncoder(
+                     new StringSink(encoded)) // HexEncoder
+    );                                        // StringSource
+    wstring encodedIV(encoded.begin(), encoded.end());
+    wcout << " iv: " << encodedIV << endl;
+
+    cout << endl;
 
     try
     {
-        cout << "plain text: " << plain << endl;
-        cipher = EncryptCCM(plain, key, iv);
-    }
+        wcout << "plain text: " << wPlain << endl;
 
+        CCM<AES, TAG_SIZE>::Encryption e;
+        e.SetKeyWithIV(key, sizeof(key), iv, sizeof(iv));
+        e.SpecifyDataLengths(0, plain.size(), 0);
+
+        StringSource(plain, true,
+                     new AuthenticatedEncryptionFilter(e,
+                                                       new StringSink(cipher)) // AuthenticatedEncryptionFilter
+        );                                                                     // StringSource
+    }
+    catch (CryptoPP::InvalidArgument &e)
+    {
+        cerr << "Caught InvalidArgument..." << endl;
+        cerr << e.what() << endl;
+        cerr << endl;
+    }
     catch (CryptoPP::Exception &e)
     {
-        printException(e);
+        cerr << "Caught Exception..." << endl;
+        cerr << e.what() << endl;
         cerr << endl;
     }
 
-    string prettyCipher = PrettyPrintString(cipher);
-    cout << "cipher: " << prettyCipher << endl;
+    // Pretty print
+    encoded.clear();
+    StringSource(cipher, true,
+                 new HexEncoder(
+                     new StringSink(encoded)) // HexEncoder
+    );                                        // StringSource
+    wstring encodedCipher(encoded.begin(), encoded.end());
+    wcout << "cipher text: " << encodedCipher << endl;
 
     try
     {
-        recovered = DecryptCCM(cipher, key, iv);
-        cout << "recovered text: " << recovered << endl;
+        CCM<AES, TAG_SIZE>::Decryption d;
+        d.SetKeyWithIV(key, sizeof(key), iv, sizeof(iv));
+        d.SpecifyDataLengths(0, cipher.size() - TAG_SIZE, 0);
+
+        AuthenticatedDecryptionFilter df(d,
+                                         new StringSink(recovered)); // AuthenticatedDecryptionFilter
+
+        StringSource(cipher, true,
+                     new Redirector(df /*, PASS_EVERYTHING */)); // StringSource
+
+        // If the object does not throw, here's the only
+        //  opportunity to check the data's integrity
+        bool b = df.GetLastResult();
+        assert(true == b);
+
+        wstring encodedRecovered = utf8_to_wstring(recovered);
+        wcout << "recovered text: " << encodedRecovered << endl;
     }
 
     catch (CryptoPP::Exception &e)
     {
-        printException(e);
+        cerr << "Caught Exception..." << endl;
+        cerr << e.what() << endl;
         cerr << endl;
     }
 }
 
-void AES_GCM(string plain, byte key[] ,byte iv[])
+void AES_GCM(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
 {
+    string plain = wstring_to_utf8(wPlain);
     string cipher, encoded, recovered;
+	// Pretty print key
+	encoded.clear();
+	StringSource(key, keyLength, true,
+		new HexEncoder(
+			new StringSink(encoded)
+		) // HexEncoder
+	); // StringSource
+    wstring encodedKey(encoded.begin(), encoded.end());
+	wcout << "key: " << encodedKey << endl;
 
-    // Pretty print key
-    string prettyKey = PrettyPrintByte(key);
-    cout << "key: " << prettyKey << endl;
+	// Pretty print iv
+	encoded.clear();
+	StringSource(iv, ivLength, true,
+		new HexEncoder(
+			new StringSink(encoded)
+		) // HexEncoder
+	); // StringSource
+    wstring encodedIV(encoded.begin(), encoded.end());
+	wcout << "iv: " << encodedIV << endl;
 
-    // Pretty print iv
-    string prettyIV = PrettyPrintByte(iv);
-    cout << "iv: " << prettyIV << endl;
+	try
+	{
+		wcout << "plain text: " << wPlain << endl;
 
-    try
-    {
-        cout << "plain text: " << plain << endl;
-        cipher = EncryptGCM(plain, key, iv); // StringSource
-    }
+		GCM< AES >::Encryption e;
+		e.SetKeyWithIV(key, keyLength, iv, ivLength);
 
-    catch (const CryptoPP::Exception &e)
-    {
-        printException(e);
-    }
+		StringSource(plain, true, 
+			new AuthenticatedEncryptionFilter(e,
+				new StringSink(cipher)
+			) // StreamTransformationFilter      
+		); // StringSource
+	}
+	catch(const CryptoPP::Exception& e)
+	{
+		cerr << e.what() << endl;
+		exit(1);
+	}
 
-    string prettyCipher = PrettyPrintString(cipher);
-    cout << "cipher: " << prettyCipher << endl;
+	// Pretty print
+	encoded.clear();
+	StringSource(cipher, true,
+		new HexEncoder(
+			new StringSink(encoded)
+		) // HexEncoder
+	); // StringSource
+    wstring encodedCipher(encoded.begin(), encoded.end());
+	wcout << "cipher text: " << encodedCipher << endl;
 
-    try
-    {
-        recovered = DecryptGCM(cipher, key, iv);
-        cout << "recovered text: " << recovered << endl;
-    }
+	try
+	{
+		GCM< AES >::Decryption d;
+		d.SetKeyWithIV(key, keyLength, iv, ivLength);
 
-    catch (const CryptoPP::Exception &e)
-    {
-        printException(e);
-    }
-}
+		// The StreamTransformationFilter removes
+		//  padding as required.
+		StringSource s(cipher, true, 
+			new AuthenticatedDecryptionFilter(d,
+				new StringSink(recovered)
+			) // StreamTransformationFilter
+		); // StringSource
 
-void GetInput(int &mode, string &plain)
-{
-    // Choose the mode and get the message
-    cout << "(1)CBC (2)CFB (3)ECB (4)OFB (5)CTR (6)XTS (7)CCM (8)GCM:";
-    cin >> mode;
-    cin.ignore();
-
-    // Get the input
-    cout << "Enter input: ";
-    getline(cin, plain);
-}
-
-void GetKeyFromScreen(wstring &wkey)
-{
-    cin.ignore();
-    wcout << L"Enter the key: ";
-    fflush(stdin);
-    getline(wcin, wkey);
-    wcout << wkey;
-    cout << endl;
-}
-
-void GetIVFromScreen(wstring &wiv)
-{
-    cin.ignore();
-    wcout << L"Enter the iv: ";
-    fflush(stdin);
-    getline(wcin, wiv);
-    cout << endl;
+		
+        wstring encodedRecovered = utf8_to_wstring(recovered);
+        wcout << "recovered text: " << encodedRecovered << endl;
+	}
+	catch(const CryptoPP::Exception& e)
+	{
+		cerr << e.what() << endl;
+		exit(1);
+	}
 }
 
 void ChooseModeKeyAndIV(int &mode)
@@ -781,144 +760,110 @@ void ChooseModeKeyAndIV(int &mode)
     cout << "(2)Key and iv from screen\n";
     cout << "(3)key and iv from file\n";
     cin >> mode;
+    cin.ignore();
 }
 
-void ModeRandom(int mode, string plain)
+void ModeExecute()
 {
+    int keyAndIVMode, mode;
+    int keyLength, ivLength;
+    wstring wPlain;
     CryptoPP::byte key[16];
     CryptoPP::byte iv[32];
-    CreateRandomKeyIV(key, iv);
+
+    wcout << "(1)Key and iv is random\n";
+    wcout << "(2)Key and iv from screen\n";
+    wcout << "(3)key and iv from file\n";
+    wcin >> keyAndIVMode;
+    wcin.ignore();
+
+    switch (keyAndIVMode)
+    {
+    case 1:
+        CreateRandomKeyIV(key, iv);
+        keyLength = sizeof(key);
+        ivLength = sizeof(iv);
+        break;
+
+    case 2:
+        wstring wkey, wiv;
+        string keyString, ivString;
+
+        CryptoPP::byte key[100];
+        CryptoPP::byte iv[100];
+
+        wcout << L"Enter key(16 bytes): ";
+        fflush(stdin);
+        wcin.ignore();
+        getline(wcin, wkey);
+        keyString = wstring_to_utf8(wkey);
+        keyLength = keyString.length();
+
+        wcout << L"Enter iv (16 bytes):";
+        fflush(stdin);
+        wcin.ignore();
+        getline(wcin, wiv);
+        ivString = wstring_to_utf8(wiv);
+        ivLength = ivString.length();
+
+        StringSource ss(keyString, false);
+        CryptoPP::ArraySink copykey(key, sizeof(key));
+        ss.Detach(new Redirector(copykey));
+        ss.Pump(16);
+
+        StringSource s1(ivString, false);
+        CryptoPP::ArraySink copyiv(iv, sizeof(iv));
+        s1.Detach(new Redirector(copyiv));
+        s1.Pump(16);
+
+        cout << endl;
+        break;
+    }
+    //wcin.ignore();
+    wcout << "(1)CBC (2)CFB (3)ECB (4)OFB (5)CTR (6)XTS (7)CCM (8)GCM: ";
+    wcin >> mode;
+    wcin.ignore();
+
+    // Get the input
+    wcout << "Enter input: ";
+    getline(wcin, wPlain);
 
     switch (mode)
     {
     case 1:
         cout << "AES Mode CBC\n";
-        AES_CBC(plain, key, iv);
+        AES_CBC(wPlain, key, iv, keyLength, ivLength);
         break;
 
     case 2:
         cout << "AES Mode CFB\n";
-        AES_CFB(plain, key, iv);
+        AES_CFB(wPlain, key, iv, keyLength, ivLength);
         break;
 
     case 3:
         cout << "AES Mode ECB\n";
-        AES_ECB(plain, key);
+        AES_ECB(wPlain, key, keyLength);
         break;
 
     case 4:
         cout << "AES Mode OFB\n";
-        AES_OFB(plain, key, iv);
+        AES_OFB(wPlain, key, iv, keyLength, ivLength);
         break;
 
     case 5:
         cout << "AES Mode CTR\n";
-        AES_CTR(plain, key, iv);
+        AES_CTR(wPlain, key, iv, keyLength, ivLength);
         break;
     case 6:
         cout << "AES Mode XTS\n";
-        AES_XTS(plain);
+        AES_XTS(wPlain, key, iv, keyLength, ivLength);
         break;
     case 7:
         cout << "AES Mode CCM\n";
-        AES_CCM(plain, key, iv);
+        AES_CCM(wPlain, key, iv, keyLength, ivLength);
     case 8:
         cout << "AES Mode GCM\n";
-        AES_GCM(plain, key, iv);
-        break;
-    }
-}
-
-void ModeScreen(int mode, string plain)
-{
-    wstring wkey, wiv;
-    string keyString, ivString;
-    CryptoPP::byte key[100];
-    CryptoPP::byte iv[100];
-
-    wcout << L"Enter the key: ";
-    // fflush(stdin);
-    cin.ignore(1);
-    getline(wcin, wkey);
-    cout << endl;
-
-    /* Reading key from  input screen*/
-    StringSource ss(keyString, false);
-    /* Create byte array space for key*/
-    CryptoPP::ArraySink copykey(key, sizeof(key));
-    /*Copy data to key*/
-    ss.Detach(new Redirector(copykey));
-    ss.Pump(16);
-    // Pump first 16 bytes
-
-    cin.ignore(1);
-    wcout << L"Enter the iv: ";
-    //fflush(stdin);
-    cin.ignore(1);
-    getline(wcin, wiv);
-    cout << endl;
-
-    /* Reading key from  input screen*/
-    StringSource s1(ivString, false);
-    /* Create byte array space for key*/
-    CryptoPP::ArraySink copyiv(iv, sizeof(iv));
-    /*Copy data to key*/
-    s1.Detach(new Redirector(copyiv));
-    s1.Pump(16);
-    // Pump first 16 bytes
-
-    // switch (mode)
-    // {
-    // case 1:
-    //     cout << "AES Mode CBC\n";
-    //     AES_CBC(plain);
-    //     break;
-
-    // case 2:
-    //     cout << "AES Mode CFB\n";
-    //     AES_CFB(plain);
-    //     break;
-
-    // case 3:
-    //     cout << "AES Mode ECB\n";
-    //     AES_ECB(plain);
-    //     break;
-
-    // case 4:
-    //     cout << "AES Mode OFB\n";
-    //     AES_OFB(plain);
-    //     break;
-
-    // case 5:
-    //     cout << "AES Mode CTR\n";
-    //     AES_CTR(plain);
-    //     break;
-    // case 6:
-    //     cout << "AES Mode XTS\n";
-    //     AES_XTS(plain);
-    //     break;
-    // case 7:
-    //     cout << "AES Mode CCM\n";
-    //     AES_CCM(plain);
-    // case 8:
-    //     cout << "AES Mode GCM\n";
-    //     AES_GCM(plain);
-    //     break;
-    // }
-}
-
-void ModeExecute(int keyAndIVMode, int mode, string plain)
-{
-    switch (keyAndIVMode)
-    {
-    case 1:
-        cout << "Key and IV is random\n";
-        ModeRandom(mode, plain);
-        break;
-
-    case 2:
-        cout << "Key and IV from screen\n";
-        ModeScreen(mode, plain);
+        AES_GCM(wPlain, key, iv, keyLength, ivLength);
         break;
     }
 }
@@ -933,14 +878,8 @@ int main(int argc, char *argv[])
     _setmode(_fileno(stdout), _O_U16TEXT);
 #else
 #endif
-
-    string plain = "";
-
-    int mode, keyAndIVMode;
-
-    GetInput(mode, plain);
-    ChooseModeKeyAndIV(keyAndIVMode);
-    ModeExecute(keyAndIVMode, mode, plain);
+    //std::wcout.imbue(std::locale("en_US.utf8"));
+    ModeExecute();
 
     return 0;
 }
