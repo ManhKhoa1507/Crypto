@@ -32,6 +32,10 @@ using CryptoPP::StreamTransformationFilter;
 using CryptoPP::StringSink;
 using CryptoPP::StringSource;
 
+#include "cryptopp/files.h"
+using CryptoPP::FileSink;
+using CryptoPP::FileSource;
+
 #include "cryptopp/aes.h"
 using CryptoPP::AES;
 
@@ -681,77 +685,71 @@ void AES_GCM(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
 {
     string plain = wstring_to_utf8(wPlain);
     string cipher, encoded, recovered;
-	// Pretty print key
-	encoded.clear();
-	StringSource(key, keyLength, true,
-		new HexEncoder(
-			new StringSink(encoded)
-		) // HexEncoder
-	); // StringSource
+    // Pretty print key
+    encoded.clear();
+    StringSource(key, keyLength, true,
+                 new HexEncoder(
+                     new StringSink(encoded)) // HexEncoder
+    );                                        // StringSource
     wstring encodedKey(encoded.begin(), encoded.end());
-	wcout << "key: " << encodedKey << endl;
+    wcout << "key: " << encodedKey << endl;
 
-	// Pretty print iv
-	encoded.clear();
-	StringSource(iv, ivLength, true,
-		new HexEncoder(
-			new StringSink(encoded)
-		) // HexEncoder
-	); // StringSource
+    // Pretty print iv
+    encoded.clear();
+    StringSource(iv, ivLength, true,
+                 new HexEncoder(
+                     new StringSink(encoded)) // HexEncoder
+    );                                        // StringSource
     wstring encodedIV(encoded.begin(), encoded.end());
-	wcout << "iv: " << encodedIV << endl;
+    wcout << "iv: " << encodedIV << endl;
 
-	try
-	{
-		wcout << "plain text: " << wPlain << endl;
+    try
+    {
+        wcout << "plain text: " << wPlain << endl;
 
-		GCM< AES >::Encryption e;
-		e.SetKeyWithIV(key, keyLength, iv, ivLength);
+        GCM<AES>::Encryption e;
+        e.SetKeyWithIV(key, keyLength, iv, ivLength);
 
-		StringSource(plain, true, 
-			new AuthenticatedEncryptionFilter(e,
-				new StringSink(cipher)
-			) // StreamTransformationFilter      
-		); // StringSource
-	}
-	catch(const CryptoPP::Exception& e)
-	{
-		cerr << e.what() << endl;
-		exit(1);
-	}
+        StringSource(plain, true,
+                     new AuthenticatedEncryptionFilter(e,
+                                                       new StringSink(cipher)) // StreamTransformationFilter
+        );                                                                     // StringSource
+    }
+    catch (const CryptoPP::Exception &e)
+    {
+        cerr << e.what() << endl;
+        exit(1);
+    }
 
-	// Pretty print
-	encoded.clear();
-	StringSource(cipher, true,
-		new HexEncoder(
-			new StringSink(encoded)
-		) // HexEncoder
-	); // StringSource
+    // Pretty print
+    encoded.clear();
+    StringSource(cipher, true,
+                 new HexEncoder(
+                     new StringSink(encoded)) // HexEncoder
+    );                                        // StringSource
     wstring encodedCipher(encoded.begin(), encoded.end());
-	wcout << "cipher text: " << encodedCipher << endl;
+    wcout << "cipher text: " << encodedCipher << endl;
 
-	try
-	{
-		GCM< AES >::Decryption d;
-		d.SetKeyWithIV(key, keyLength, iv, ivLength);
+    try
+    {
+        GCM<AES>::Decryption d;
+        d.SetKeyWithIV(key, keyLength, iv, ivLength);
 
-		// The StreamTransformationFilter removes
-		//  padding as required.
-		StringSource s(cipher, true, 
-			new AuthenticatedDecryptionFilter(d,
-				new StringSink(recovered)
-			) // StreamTransformationFilter
-		); // StringSource
+        // The StreamTransformationFilter removes
+        //  padding as required.
+        StringSource s(cipher, true,
+                       new AuthenticatedDecryptionFilter(d,
+                                                         new StringSink(recovered)) // StreamTransformationFilter
+        );                                                                          // StringSource
 
-		
         wstring encodedRecovered = utf8_to_wstring(recovered);
         wcout << "recovered text: " << encodedRecovered << endl;
-	}
-	catch(const CryptoPP::Exception& e)
-	{
-		cerr << e.what() << endl;
-		exit(1);
-	}
+    }
+    catch (const CryptoPP::Exception &e)
+    {
+        cerr << e.what() << endl;
+        exit(1);
+    }
 }
 
 void ChooseModeKeyAndIV(int &mode)
@@ -768,6 +766,8 @@ void ModeExecute()
     int keyAndIVMode, mode;
     int keyLength, ivLength;
     wstring wPlain;
+    wstring wkey, wiv;
+    string keyString, ivString;
     CryptoPP::byte key[16];
     CryptoPP::byte iv[32];
 
@@ -777,17 +777,15 @@ void ModeExecute()
     wcin >> keyAndIVMode;
     wcin.ignore();
 
-    switch (keyAndIVMode)
+    if (keyAndIVMode == 1)
     {
-    case 1:
         CreateRandomKeyIV(key, iv);
         keyLength = sizeof(key);
         ivLength = sizeof(iv);
-        break;
+    }
 
-    case 2:
-        wstring wkey, wiv;
-        string keyString, ivString;
+    else if (keyAndIVMode == 2)
+    {
 
         CryptoPP::byte key[100];
         CryptoPP::byte iv[100];
@@ -815,9 +813,33 @@ void ModeExecute()
         CryptoPP::ArraySink copyiv(iv, sizeof(iv));
         s1.Detach(new Redirector(copyiv));
         s1.Pump(16);
+        wcout << endl;
+    }
 
-        cout << endl;
-        break;
+    else
+    {
+
+        //Write key to file AES_key.key
+        StringSource s2(iv, sizeof(iv), true, new FileSink("AES_iv.key"));
+        /* Reading key from file*/
+        FileSource fs("AES_iv.key", false);
+        /*Create space  for key*/
+        CryptoPP::ArraySink copyiv2(iv, sizeof(iv));
+        /*Copy data from AES_key.key  to  key */
+        fs.Detach(new Redirector(copyiv2));
+        fs.Pump(16); // Pump first 16 bytes
+        ivLength = 16;
+
+        //Write key to file AES_key.key
+        StringSource s3(iv, sizeof(iv), true, new FileSink("AES_iv.key"));
+        /* Reading key from file*/
+        FileSource fs1("AES_iv.key", false);
+        /*Create space  for key*/
+        CryptoPP::ArraySink copyiv3(iv, sizeof(iv));
+        /*Copy data from AES_key.key  to  key */
+        fs1.Detach(new Redirector(copyiv3));
+        fs1.Pump(16); // Pump first 16 bytes
+        ivLength = 16;
     }
     //wcin.ignore();
     wcout << "(1)CBC (2)CFB (3)ECB (4)OFB (5)CTR (6)XTS (7)CCM (8)GCM: ";
