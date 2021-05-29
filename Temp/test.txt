@@ -1,2 +1,4 @@
 2CB9DD7659BEEB19
 39D85A3FAE4E0823
+
+wstring encoded1(plain.begin(),plain.end());
