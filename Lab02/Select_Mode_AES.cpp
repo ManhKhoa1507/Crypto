@@ -214,6 +214,69 @@ void AES_CBC(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
     }
 }
 
+void AES_CBC_Time(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
+{
+    string plain = wstring_to_utf8(wPlain);
+    string cipher, encoded, recovered;
+    wstring encodedRecovered(encoded.begin(), encoded.end());
+
+    try
+    {
+        CBC_Mode<AES>::Encryption e;
+        e.SetKeyWithIV(key, keyLength, iv);
+
+        // The StreamTransformationFilter removes
+        //  padding as required.
+        StringSource s(plain, true,
+                       new StreamTransformationFilter(e,
+                                                      new StringSink(cipher)) // StreamTransformationFilter
+        );                                                                    // StringSource
+
+#if 0
+		StreamTransformationFilter filter(e);
+		filter.Put((const byte*)plain.data(), plain.size());
+		filter.MessageEnd();
+
+		const size_t ret = filter.MaxRetrievable();
+		cipher.resize(ret);
+		filter.Get((byte*)cipher.data(), cipher.size());
+#endif
+    }
+    catch (const CryptoPP::Exception &e)
+    {
+        cerr << e.what() << endl;
+        exit(1);
+    }
+
+    try
+    {
+        CBC_Mode<AES>::Decryption d;
+        d.SetKeyWithIV(key, keyLength, iv);
+
+        // The StreamTransformationFilter removes
+        //  padding as required.
+        StringSource s(cipher, true,
+                       new StreamTransformationFilter(d,
+                                                      new StringSink(recovered)) // StreamTransformationFilter
+        );                                                                       // StringSource
+
+#if 0
+		StreamTransformationFilter filter(d);
+		filter.Put((const byte*)cipher.data(), cipher.size());
+		filter.MessageEnd();
+
+		const size_t ret = filter.MaxRetrievable();
+		recovered.resize(ret);
+		filter.Get((byte*)recovered.data(), recovered.size());
+#endif
+    }
+    catch (const CryptoPP::Exception &e)
+    {
+        cerr << e.what() << endl;
+        exit(1);
+    }
+}
+
 void AES_CFB(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
 {
     string plain = wstring_to_utf8(wPlain);
@@ -289,6 +352,48 @@ void AES_CFB(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
     }
 }
 
+void AES_CFB_Time(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
+{
+    string plain = wstring_to_utf8(wPlain);
+    string cipher, encoded, recovered;
+
+    try
+    {
+        CFB_Mode<AES>::Encryption e;
+        e.SetKeyWithIV(key, keyLength, iv);
+
+        // CFB mode must not use padding. Specifying
+        //  a scheme will result in an exception
+        StringSource(plain, true,
+                     new StreamTransformationFilter(e,
+                                                    new StringSink(cipher)) // StreamTransformationFilter
+        );                                                                  // StringSource
+    }
+    catch (const CryptoPP::Exception &e)
+    {
+        cerr << e.what() << endl;
+        exit(1);
+    }
+
+    try
+    {
+        CFB_Mode<AES>::Decryption d;
+        d.SetKeyWithIV(key, keyLength, iv);
+
+        // The StreamTransformationFilter removes
+        //  padding as required.
+        StringSource s(cipher, true,
+                       new StreamTransformationFilter(d,
+                                                      new StringSink(recovered)) // StreamTransformationFilter
+        );                                                                       // StringSource
+    }
+    catch (const CryptoPP::Exception &e)
+    {
+        cerr << e.what() << endl;
+        exit(1);
+    }
+}
+
 void AES_ECB(wstring wPlain, byte key[], int keyLength)
 {
     string plain = wstring_to_utf8(wPlain);
@@ -354,6 +459,50 @@ void AES_ECB(wstring wPlain, byte key[], int keyLength)
     }
 }
 
+void AES_ECB_Time(wstring wPlain, byte key[], int keyLength)
+{
+    string plain = wstring_to_utf8(wPlain);
+    string cipher, encoded, recovered;
+
+    try
+    {
+
+        ECB_Mode<AES>::Encryption e;
+        e.SetKey(key, keyLength);
+
+        // The StreamTransformationFilter adds padding
+        //  as required. ECB and CBC Mode must be padded
+        //  to the block size of the cipher.
+        StringSource(plain, true,
+                     new StreamTransformationFilter(e,
+                                                    new StringSink(cipher)) // StreamTransformationFilter
+        );                                                                  // StringSource
+    }
+    catch (const CryptoPP::Exception &e)
+    {
+        cerr << e.what() << endl;
+        exit(1);
+    }
+
+    try
+    {
+        ECB_Mode<AES>::Decryption d;
+        d.SetKey(key, keyLength);
+
+        // The StreamTransformationFilter removes
+        //  padding as required.
+        StringSource s(cipher, true,
+                       new StreamTransformationFilter(d,
+                                                      new StringSink(recovered)) // StreamTransformationFilter
+        );                                                                       // StringSource
+    }
+    catch (const CryptoPP::Exception &e)
+    {
+        cerr << e.what() << endl;
+        exit(1);
+    }
+}
+
 void AES_OFB(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
 {
     string plain = wstring_to_utf8(wPlain);
@@ -409,7 +558,7 @@ void AES_OFB(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
     try
     {
         OFB_Mode<AES>::Decryption d;
-        d.SetKeyWithIV(key, sizeof(key), iv);
+        d.SetKeyWithIV(key, keyLength, iv);
 
         // The StreamTransformationFilter removes
         //  padding as required.
@@ -419,6 +568,48 @@ void AES_OFB(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
         );                                                                       // StringSource
         wstring encodedRecovered = utf8_to_wstring(recovered);
         wcout << "recovered text: " << encodedRecovered << endl;
+    }
+    catch (const CryptoPP::Exception &e)
+    {
+        cerr << e.what() << endl;
+        exit(1);
+    }
+}
+
+void AES_OFB_Time(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
+{
+    string plain = wstring_to_utf8(wPlain);
+    string cipher, encoded, recovered;
+
+    try
+    {
+        OFB_Mode<AES>::Encryption e;
+        e.SetKeyWithIV(key, keyLength, iv);
+
+        // OFB mode must not use padding. Specifying
+        //  a scheme will result in an exception
+        StringSource(plain, true,
+                     new StreamTransformationFilter(e,
+                                                    new StringSink(cipher)) // StreamTransformationFilter
+        );                                                                  // StringSource
+    }
+    catch (const CryptoPP::Exception &e)
+    {
+        cerr << e.what() << endl;
+        exit(1);
+    }
+
+    try
+    {
+        OFB_Mode<AES>::Decryption d;
+        d.SetKeyWithIV(key, keyLength, iv);
+
+        // The StreamTransformationFilter removes
+        //  padding as required.
+        StringSource s(cipher, true,
+                       new StreamTransformationFilter(d,
+                                                      new StringSink(recovered)) // StreamTransformationFilter
+        );                                                                       // StringSource
     }
     catch (const CryptoPP::Exception &e)
     {
@@ -493,6 +684,49 @@ void AES_CTR(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
         );                                                                       // StringSource
         wstring encodedRecovered = utf8_to_wstring(recovered);
         wcout << "recovered text: " << encodedRecovered << endl;
+    }
+    catch (const CryptoPP::Exception &e)
+    {
+        cerr << e.what() << endl;
+        exit(1);
+    }
+}
+
+void AES_CTR_Time(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
+{
+    string plain = wstring_to_utf8(wPlain);
+    string cipher, encoded, recovered;
+
+    try
+    {
+        CTR_Mode<AES>::Encryption e;
+        e.SetKeyWithIV(key, keyLength, iv);
+
+        // The StreamTransformationFilter adds padding
+        //  as required. ECB and CBC Mode must be padded
+        //  to the block size of the cipher.
+        StringSource(plain, true,
+                     new StreamTransformationFilter(e,
+                                                    new StringSink(cipher)) // StreamTransformationFilter
+        );                                                                  // StringSource
+    }
+    catch (const CryptoPP::Exception &e)
+    {
+        cerr << e.what() << endl;
+        exit(1);
+    }
+
+    try
+    {
+        CTR_Mode<AES>::Decryption d;
+        d.SetKeyWithIV(key, sizeof(key), iv);
+
+        // The StreamTransformationFilter removes
+        //  padding as required.
+        StringSource s(cipher, true,
+                       new StreamTransformationFilter(d,
+                                                      new StringSink(recovered)) // StreamTransformationFilter
+        );                                                                       // StringSource
     }
     catch (const CryptoPP::Exception &e)
     {
@@ -577,6 +811,59 @@ void AES_XTS(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
         // StringSource
         wstring encodedRecovered = utf8_to_wstring(recovered);
         wcout << "recovered text: " << encodedRecovered << endl;
+    }
+    catch (const CryptoPP::Exception &ex)
+    {
+        std::cerr << ex.what() << std::endl;
+        exit(1);
+    }
+}
+
+void AES_XTS_Time(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
+{
+    using namespace CryptoPP;
+
+    string plain = wstring_to_utf8(wPlain);
+    std::string cipher, encoded, recovered;
+
+    try
+    {
+        XTS_Mode<AES>::Encryption enc;
+        enc.SetKeyWithIV(key, keyLength, iv);
+
+#if 0
+        std::cout << "key length: " << enc.DefaultKeyLength() << std::endl;
+        std::cout << "key length (min): " << enc.MinKeyLength() << std::endl;
+        std::cout << "key length (max): " << enc.MaxKeyLength() << std::endl;
+        std::cout << "block size: " << enc.BlockSize() << std::endl;
+#endif
+
+        // The StreamTransformationFilter adds padding
+        //  as requiredec. ECB and XTS Mode must be padded
+        //  to the block size of the cipher.
+        StringSource ss(plain, true,
+                        new StreamTransformationFilter(enc,
+                                                       new StringSink(cipher),
+                                                       StreamTransformationFilter::NO_PADDING) // StreamTransformationFilter
+        );                                                                                     // StringSource
+    }
+    catch (const CryptoPP::Exception &ex)
+    {
+        std::cerr << ex.what() << std::endl;
+        exit(1);
+    }
+    try
+    {
+        XTS_Mode<AES>::Decryption dec;
+        dec.SetKeyWithIV(key, keyLength, iv);
+
+        // The StreamTransformationFilter removes
+        //  padding as requiredec.
+        StringSource ss(cipher, true,
+                        new StreamTransformationFilter(dec,
+                                                       new StringSink(recovered),
+                                                       StreamTransformationFilter::NO_PADDING) // StreamTransformationFilter
+        );
     }
     catch (const CryptoPP::Exception &ex)
     {
@@ -681,6 +968,67 @@ void AES_CCM(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
     }
 }
 
+void AES_CCM_Time(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
+{
+    string plain = wstring_to_utf8(wPlain);
+    const int TAG_SIZE = 8;
+
+    // Encrypted, with Tag
+    string cipher, encoded;
+    // Recovered
+    string recovered;
+
+    try
+    {
+
+        CCM<AES, TAG_SIZE>::Encryption e;
+        e.SetKeyWithIV(key, sizeof(key), iv, sizeof(iv));
+        e.SpecifyDataLengths(0, plain.size(), 0);
+
+        StringSource(plain, true,
+                     new AuthenticatedEncryptionFilter(e,
+                                                       new StringSink(cipher)) // AuthenticatedEncryptionFilter
+        );                                                                     // StringSource
+    }
+    catch (CryptoPP::InvalidArgument &e)
+    {
+        cerr << "Caught InvalidArgument..." << endl;
+        cerr << e.what() << endl;
+        cerr << endl;
+    }
+    catch (CryptoPP::Exception &e)
+    {
+        cerr << "Caught Exception..." << endl;
+        cerr << e.what() << endl;
+        cerr << endl;
+    }
+
+    try
+    {
+        CCM<AES, TAG_SIZE>::Decryption d;
+        d.SetKeyWithIV(key, sizeof(key), iv, sizeof(iv));
+        d.SpecifyDataLengths(0, cipher.size() - TAG_SIZE, 0);
+
+        AuthenticatedDecryptionFilter df(d,
+                                         new StringSink(recovered)); // AuthenticatedDecryptionFilter
+
+        StringSource(cipher, true,
+                     new Redirector(df /*, PASS_EVERYTHING */)); // StringSource
+
+        // If the object does not throw, here's the only
+        //  opportunity to check the data's integrity
+        bool b = df.GetLastResult();
+        assert(true == b);
+    }
+
+    catch (CryptoPP::Exception &e)
+    {
+        cerr << "Caught Exception..." << endl;
+        cerr << e.what() << endl;
+        cerr << endl;
+    }
+}
+
 void AES_GCM(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
 {
     string plain = wstring_to_utf8(wPlain);
@@ -752,6 +1100,45 @@ void AES_GCM(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
     }
 }
 
+void AES_GCM_Time(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
+{
+    string plain = wstring_to_utf8(wPlain);
+    string cipher, encoded, recovered;
+    try
+    {
+        GCM<AES>::Encryption e;
+        e.SetKeyWithIV(key, keyLength, iv, ivLength);
+
+        StringSource(plain, true,
+                     new AuthenticatedEncryptionFilter(e,
+                                                       new StringSink(cipher)) // StreamTransformationFilter
+        );                                                                     // StringSource
+    }
+    catch (const CryptoPP::Exception &e)
+    {
+        cerr << e.what() << endl;
+        exit(1);
+    }
+
+    try
+    {
+        GCM<AES>::Decryption d;
+        d.SetKeyWithIV(key, keyLength, iv, ivLength);
+
+        // The StreamTransformationFilter removes
+        //  padding as required.
+        StringSource s(cipher, true,
+                       new AuthenticatedDecryptionFilter(d,
+                                                         new StringSink(recovered)) // StreamTransformationFilter
+        );                                                                          // StringSource
+    }
+    catch (const CryptoPP::Exception &e)
+    {
+        cerr << e.what() << endl;
+        exit(1);
+    }
+}
+
 void ChooseModeKeyAndIV(int &mode)
 {
     cout << "(1)Key and iv is random\n";
@@ -761,10 +1148,108 @@ void ChooseModeKeyAndIV(int &mode)
     cin.ignore();
 }
 
+void DisplayResult(double total)
+{
+    // Display result (cipherText, total time to hash 10000 rounds and Execution time)
+    wcout << "\nTotal time for 10.000 rounds: " << total << " ms" << endl;
+    wcout << "\nExecution time: " << total / 10000 << " ms" << endl
+          << endl;
+}
+
+double CBC_Time(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
+{
+    int start_s = clock();
+
+    AES_CBC_Time(wPlain, key, iv, keyLength, ivLength);
+
+    int stop_s = clock();
+    double etime = (stop_s - start_s) / double(CLOCKS_PER_SEC) * 1000;
+    return etime;
+}
+
+double CFB_Time(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
+{
+    int start_s = clock();
+
+    AES_CFB_Time(wPlain, key, iv, keyLength, ivLength);
+
+    int stop_s = clock();
+    double etime = (stop_s - start_s) / double(CLOCKS_PER_SEC) * 1000;
+    return etime;
+}
+
+double ECB_Time(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
+{
+    int start_s = clock();
+
+    AES_ECB_Time(wPlain, key, keyLength);
+
+    int stop_s = clock();
+    double etime = (stop_s - start_s) / double(CLOCKS_PER_SEC) * 1000;
+    return etime;
+}
+
+double OFB_Time(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
+{
+    int start_s = clock();
+
+    AES_OFB_Time(wPlain, key, iv, keyLength, ivLength);
+
+    int stop_s = clock();
+    double etime = (stop_s - start_s) / double(CLOCKS_PER_SEC) * 1000;
+    return etime;
+}
+
+double CTR_Time(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
+{
+    int start_s = clock();
+
+    AES_CTR_Time(wPlain, key, iv, keyLength, ivLength);
+
+    int stop_s = clock();
+    double etime = (stop_s - start_s) / double(CLOCKS_PER_SEC) * 1000;
+    return etime;
+}
+
+double XTS_Time(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
+{
+    int start_s = clock();
+
+    AES_XTS_Time(wPlain, key, iv, keyLength, ivLength);
+
+    int stop_s = clock();
+    double etime = (stop_s - start_s) / double(CLOCKS_PER_SEC) * 1000;
+    return etime;
+}
+
+double CCM_Time(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
+{
+    int start_s = clock();
+
+    AES_CCM_Time(wPlain, key, iv, keyLength, ivLength);
+
+    int stop_s = clock();
+    double etime = (stop_s - start_s) / double(CLOCKS_PER_SEC) * 1000;
+    return etime;
+}
+
+double GCM_Time(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
+{
+    int start_s = clock();
+
+    AES_GCM_Time(wPlain, key, iv, keyLength, ivLength);
+
+    int stop_s = clock();
+    double etime = (stop_s - start_s) / double(CLOCKS_PER_SEC) * 1000;
+    return etime;
+}
+
 void ModeExecute()
 {
     int keyAndIVMode, mode;
     int keyLength, ivLength;
+    int a = 0;
+    double total, result = 0;
     wstring wPlain;
     wstring wkey, wiv;
     string keyString, ivString;
@@ -818,7 +1303,6 @@ void ModeExecute()
 
     else
     {
-
         //Write key to file AES_key.key
         StringSource s2(iv, sizeof(iv), true, new FileSink("AES_iv.key"));
         /* Reading key from file*/
@@ -853,39 +1337,99 @@ void ModeExecute()
     switch (mode)
     {
     case 1:
-        cout << "AES Mode CBC\n";
+        wcout << "AES Mode CBC\n";
         AES_CBC(wPlain, key, iv, keyLength, ivLength);
-        break;
 
+        while (a < 10000)
+        {
+            total += CBC_Time(wPlain, key, iv, keyLength, ivLength);
+            a++;
+        }
+        DisplayResult(total);
+        break;
     case 2:
-        cout << "AES Mode CFB\n";
+        wcout << "AES Mode CFB\n";
         AES_CFB(wPlain, key, iv, keyLength, ivLength);
-        break;
 
+        while (a < 10000)
+        {
+            total += CFB_Time(wPlain, key, iv, keyLength, ivLength);
+            a++;
+        }
+        DisplayResult(total);
+
+        break;
     case 3:
-        cout << "AES Mode ECB\n";
+        wcout << "AES Mode ECB\n";
         AES_ECB(wPlain, key, keyLength);
-        break;
 
+        while (a < 10000)
+        {
+            total += ECB_Time(wPlain, key, iv, keyLength, ivLength);
+            a++;
+        }
+        DisplayResult(total);
+
+        break;
     case 4:
-        cout << "AES Mode OFB\n";
+        wcout << "AES Mode OFB\n";
         AES_OFB(wPlain, key, iv, keyLength, ivLength);
-        break;
 
+        while (a < 10000)
+        {
+            total += OFB_Time(wPlain, key, iv, keyLength, ivLength);
+            a++;
+        }
+        DisplayResult(total);
+
+        break;
     case 5:
-        cout << "AES Mode CTR\n";
+        wcout << "AES Mode CTR\n";
         AES_CTR(wPlain, key, iv, keyLength, ivLength);
+
+        while (a < 10000)
+        {
+            total += CTR_Time(wPlain, key, iv, keyLength, ivLength);
+            a++;
+        }
+        DisplayResult(total);
+
         break;
     case 6:
-        cout << "AES Mode XTS\n";
+        wcout << "AES Mode XTS\n";
         AES_XTS(wPlain, key, iv, keyLength, ivLength);
+
+        while (a < 10000)
+        {
+            total += XTS_Time(wPlain, key, iv, keyLength, ivLength);
+            a++;
+        }
+        DisplayResult(total);
+
         break;
     case 7:
-        cout << "AES Mode CCM\n";
+        wcout << "AES Mode CCM\n";
         AES_CCM(wPlain, key, iv, keyLength, ivLength);
+
+        while (a < 10000)
+        {
+            total += CCM_Time(wPlain, key, iv, keyLength, ivLength);
+            a++;
+        }
+        DisplayResult(total);
+
+        break;
     case 8:
-        cout << "AES Mode GCM\n";
+        wcout << "AES Mode GCM\n";
         AES_GCM(wPlain, key, iv, keyLength, ivLength);
+
+        while (a < 10000)
+        {
+            total += GCM_Time(wPlain, key, iv, keyLength, ivLength);
+            a++;
+        }
+        DisplayResult(total);
+
         break;
     }
 }
