@@ -676,7 +676,7 @@ void AES_CTR(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
     try
     {
         CTR_Mode<AES>::Decryption d;
-        d.SetKeyWithIV(key, sizeof(key), iv);
+        d.SetKeyWithIV(key, keyLength, iv);
 
         // The StreamTransformationFilter removes
         //  padding as required.
@@ -721,7 +721,7 @@ void AES_CTR_Time(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLe
     try
     {
         CTR_Mode<AES>::Decryption d;
-        d.SetKeyWithIV(key, sizeof(key), iv);
+        d.SetKeyWithIV(key, keyLength, iv);
 
         // The StreamTransformationFilter removes
         //  padding as required.

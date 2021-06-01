@@ -1,11 +1,53 @@
-#include <iostream>
-using namespace std;
-
 #include <bits/stdc++.h>
-using namespace std;
+
+#include <iostream>
+using std::cerr;
+using std::endl;
+using std::wcin;
+using std::wcout;
+
+#include <string>
+using std::string;
+using std::wstring;
+
+#include <cstdlib>
+using std::exit;
+
+#include <fstream>
+#include <string>
+using std::stringstream;
+using std::unordered_map;
+using std::vector;
 
 #include <ctime>
+/* Set _setmode()*/
+#ifdef _WIN32
+#include <io.h>
+#elif __linux__
+#include <inttypes.h>
+#include <unistd.h>
+#define __int64 int64_t
+#define _close close
+#define _read read
+#define _lseek64 lseek64
+#define _O_RDONLY O_RDONLY
+#define _open open
+#define _lseeki64 lseek64
+#define _lseek lseek
+#define stricmp strcasecmp
+#endif
+#include <fcntl.h>
+/* Convert string*/
+#include <locale>
+using std::wstring_convert;
+#include <codecvt>
+using std::codecvt_utf8;
+#include <sstream>
+using std::ostringstream;
 
+/* Functions def*/
+wstring string_to_wstring(const std::string &str);
+string wstring_to_string(const std::wstring &str);
 string hex2bin(string s)
 {
     // hexadecimal to binary conversion
@@ -108,11 +150,9 @@ string xor_(string a, string b)
     }
     return ans;
 }
-
 string encrypt(string pt, vector<string> rkb, vector<string> rk)
 {
     // Hexadecimal to binary
-    // pt = hex2bin(pt);
 
     // Initial Permutation Table
     int initial_perm[64] = {58, 50, 42, 34, 26, 18, 10, 2,
@@ -125,13 +165,10 @@ string encrypt(string pt, vector<string> rkb, vector<string> rk)
                             63, 55, 47, 39, 31, 23, 15, 7};
     // Initial Permutation
     pt = permute(pt, initial_perm, 64);
-    // cout << "After initial permutation: " << bin2hex(pt) << endl;
 
     // Splitting
     string left = pt.substr(0, 32);
     string right = pt.substr(32, 32);
-    // cout << "After splitting: L0=" << bin2hex(left)
-    //      << " R0=" << bin2hex(right) << endl;
 
     // Expansion D-box Table
     int exp_d[48] = {32, 1, 2, 3, 4, 5, 4, 5,
@@ -222,8 +259,6 @@ string encrypt(string pt, vector<string> rkb, vector<string> rk)
         {
             swap(left, right);
         }
-        // cout << "Round " << i + 1 << " " << bin2hex(left) << " "
-        //      << bin2hex(right) << " " << rk[i] << endl;
     }
 
     // Combination
@@ -240,7 +275,6 @@ string encrypt(string pt, vector<string> rkb, vector<string> rk)
                           33, 1, 41, 9, 49, 17, 57, 25};
 
     // Final Permutation
-    // string cipher = bin2hex(permute(combine, final_perm, 64));
 
     string cipher = permute(combine, final_perm, 64);
     return cipher;
@@ -253,8 +287,6 @@ string encryptCBC(string plain, string iv, vector<string> rkb, vector<string> rk
     int begin = 0;
     iv = hex2bin(iv);
     plain = hex2bin(plain);
-
-    cout << "plain: " << plain;
 
     for (int i = 0; i < plain.length(); i++)
     {
@@ -280,7 +312,6 @@ string decryptCBC(string cipher, string iv, vector<string> rkb, vector<string> r
 
     iv = hex2bin(iv);
     cipher = hex2bin(cipher);
-    cout << "\ncipher: " << cipher;
 
     for (int i = 0; i < cipher.length(); i++)
     {
@@ -299,19 +330,42 @@ string decryptCBC(string cipher, string iv, vector<string> rkb, vector<string> r
     recovered = bin2hex(recovered);
     return recovered;
 }
-void toUpperCase(std::string &str)
-{
-    std::transform(str.begin(), str.end(), str.begin(), ::toupper);
-}
+
 /////////////////
+
 string Str2Hex(string str)
 {
-    stringstream ss;
-    for (int i = 0; i < str.length(); ++i)
+    std::ostringstream os;
+
+    for (unsigned char const &c : str)
     {
-        ss << std::hex << (int)str[i];
+        os << std::hex << std::setprecision(2) << std::setw(2)
+           << std::setfill('0') << static_cast<int>(c);
     }
-    return ss.str();
+
+    return os.str();
+}
+string hex2String(const std::string &input)
+{
+    static const char *const lut = "0123456789abcdef";
+    size_t len = input.length();
+    if (len & 1)
+        throw;
+    std::string output;
+    output.reserve(len / 2);
+    for (size_t i = 0; i < len; i += 2)
+    {
+        char a = input[i];
+        const char *p = std::lower_bound(lut, lut + 16, a);
+        if (*p != a)
+            throw;
+        char b = input[i + 1];
+        const char *q = std::lower_bound(lut, lut + 16, b);
+        if (*q != b)
+            throw;
+        output.push_back(((p - lut) << 4) | (q - lut));
+    }
+    return output;
 }
 
 double DES_CBC_Time_Cal(string str, string iv, vector<string> rkb, vector<string> rk)
@@ -335,52 +389,46 @@ void DisplayResult(double total)
           << endl;
 }
 
-string hex2String(const std::string &input)
-{
-    static const char *const lut = "0123456789abcdef";
-    size_t len = input.length();
-    if (len & 1)
-        throw;
-    std::string output;
-    output.reserve(len / 2);
-    for (size_t i = 0; i < len; i += 2)
-    {
-        char a = input[i];
-        const char *p = std::lower_bound(lut, lut + 16, a);
-        if (*p != a)
-            throw;
-        char b = input[i + 1];
-        const char *q = std::lower_bound(lut, lut + 16, b);
-        if (*q != b)
-            throw;
-        output.push_back(((p - lut) << 4) | (q - lut));
-    }
-    return output;
-}
-/////////////////////////
 int main()
 {
+    int typeOs;
+#ifdef __linux__
+    setlocale(LC_ALL, "");
+    typeOs = 0;
+#elif _WIN32
+    _setmode(_fileno(stdin), _O_U16TEXT);
+    _setmode(_fileno(stdout), _O_U16TEXT);
+    typeOs = 1;
+#else
+#endif
     // pt is plain text
     string pt, key, iv;
-    cout << "Enter plain text: ";
-    getline(cin, pt);
-
+    wstring wspt, wskey, swiv;
+    wcout << "Enter plain text: ";
+    getline(wcin, wspt);
+    
+    pt = wstring_to_string(wspt);
     while (pt.length() % 8 != 0)
     {
         pt += " ";
     }
-    cout << pt;
-    cout << "Plain text : " << pt << endl;
+    wcout << string_to_wstring(pt) << endl;
     pt = Str2Hex(pt);
 
-    cout << "Enter key(8 bytes): ";
-    getline(cin, key);
+    wcout << "Enter key(8 bytes): ";
+    wcin.ignore();
+    getline(wcin, wskey);
+    key = wstring_to_string(wskey);
     key = Str2Hex(key);
+    wcout << "Key at hex: " << string_to_wstring(key) << endl;
 
     //pt = "123456ABCD132536";
     //key = "AABB09182736CCDD";
-    iv = "43cf47590c68cb47";
-    // Key Generation
+    
+    wstring wIV;
+    wcout<<"Enter iv: ";
+    getline(wcin, wIV);
+    iv = wstring_to_string(wIV);
 
     // Hex to binary
     key = hex2bin(key);
@@ -436,19 +484,31 @@ int main()
         rk.push_back(bin2hex(RoundKey));
     }
 
-    cout << "\nEncryption: ";
+    wcout << "\nEncryption: ";
     string cipher = encryptCBC(pt, iv, rkb, rk);
-    cout << "\nCipher Text: " << cipher << endl;
+    wcout << "\nCipher Text: " << string_to_wstring(cipher) << endl;
 
-    cout << "\nDecryption: ";
+    wcout << "\nDecryption: ";
     reverse(rkb.begin(), rkb.end());
     reverse(rk.begin(), rk.end());
 
     string text = decryptCBC(cipher, iv, rkb, rk);
-    cout << "\n Recovered plain Text: " << text << endl;
-
-    cout << hex2String(text) << endl;
+    wcout << "\n Recovered plain Text: " << string_to_wstring(text) << endl;
+    wcout << string_to_wstring(hex2String(text)) << endl;
 
     double total = DES_CBC_Time_Cal(pt, iv, rkb, rk);
     DisplayResult(total);
+}
+
+/* convert string to wstring */
+wstring string_to_wstring(const std::string &str)
+{
+    wstring_convert<codecvt_utf8<wchar_t>> towstring;
+    return towstring.from_bytes(str);
+}
+/* convert ưstring to string */
+string wstring_to_string(const std::wstring &str)
+{
+    wstring_convert<codecvt_utf8<wchar_t>> tostring;
+    return tostring.to_bytes(str);
 }

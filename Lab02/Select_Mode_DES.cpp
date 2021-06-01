@@ -634,7 +634,7 @@ void ModeExecute()
             keyString = wstring_to_utf8(wkey);
             keyLength = keyString.length();
 
-            wcout << L"Enter iv (16 bytes):";
+            wcout << L"Enter iv (16 bytes): ";
             fflush(stdin);
             wcin.ignore();
             getline(wcin, wiv);
