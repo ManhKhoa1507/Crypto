@@ -249,13 +249,16 @@ string encryptCBC(string plain, string iv, vector<string> rkb, vector<string> rk
     int count = 0;
     int begin = 0;
     iv = hex2bin(iv);
+    plain = hex2bin(plain);
+
+    cout << "plain: " << plain;
 
     for (int i = 0; i < plain.length(); i++)
     {
         count++;
-        if (count % 8 == 0)
+        if (count % 64 == 0)
         {
-            string hexTemp = hex2bin(plain.substr(begin, 8));
+            string hexTemp = plain.substr(begin, 64);
             string temp = xor_(hexTemp, iv);
             cipher += encrypt(temp, rkb, rk);
             iv = cipher;
@@ -271,14 +274,18 @@ string decryptCBC(string cipher, string iv, vector<string> rkb, vector<string> r
     string recovered;
     int count = 0;
     int begin = 0;
+    
+    
     iv = hex2bin(iv);
+    cipher = hex2bin(cipher);
+    cout << "\ncipher: " << cipher;
 
     for (int i = 0; i < cipher.length(); i++)
     {
         count++;
-        if (count % 8 == 0)
+        if (count % 64 == 0)
         {
-            string hexTemp = hex2bin(cipher.substr(begin, 8));
+            string hexTemp = cipher.substr(begin, 64);
             string block = encrypt(hexTemp, rkb, rk);
             
             recovered += xor_(block, iv);
