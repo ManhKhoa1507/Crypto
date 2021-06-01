@@ -18,12 +18,12 @@ string hex2bin(string s)
     mp['7'] = "0111";
     mp['8'] = "1000";
     mp['9'] = "1001";
-    mp['A'] = "1010";
-    mp['B'] = "1011";
-    mp['C'] = "1100";
-    mp['D'] = "1101";
-    mp['E'] = "1110";
-    mp['F'] = "1111";
+    mp['a'] = "1010";
+    mp['b'] = "1011";
+    mp['c'] = "1100";
+    mp['d'] = "1101";
+    mp['e'] = "1110";
+    mp['f'] = "1111";
     string bin = "";
     for (int i = 0; i < s.size(); i++)
     {
@@ -45,12 +45,12 @@ string bin2hex(string s)
     mp["0111"] = "7";
     mp["1000"] = "8";
     mp["1001"] = "9";
-    mp["1010"] = "A";
-    mp["1011"] = "B";
-    mp["1100"] = "C";
-    mp["1101"] = "D";
-    mp["1110"] = "E";
-    mp["1111"] = "F";
+    mp["1010"] = "a";
+    mp["1011"] = "b";
+    mp["1100"] = "c";
+    mp["1101"] = "d";
+    mp["1110"] = "e";
+    mp["1111"] = "f";
     string hex = "";
     for (int i = 0; i < s.length(); i += 4)
     {
@@ -297,19 +297,61 @@ string decryptCBC(string cipher, string iv, vector<string> rkb, vector<string> r
     recovered = bin2hex(recovered);
     return recovered;
 }
+void  toUpperCase(std::string& str)
+{
+    std::transform(str.begin(), str.end(), str.begin(), ::toupper);
+}
+/////////////////
+string Str2Hex(string str)
+{
+    stringstream ss;
+    for(int i=0; i<str.length(); ++i)
+    {
+        ss << std::hex << (int)str[i];
+    }
+    return ss.str();
+}
 
+string hex2String(const std::string& input) {
+  static const char* const lut = "0123456789abcdef";
+  size_t len = input.length();
+  if (len & 1) throw;
+  std::string output;
+  output.reserve(len / 2);
+  for (size_t i = 0; i < len; i += 2) {
+    char a = input[i];
+    const char* p = std::lower_bound(lut, lut + 16, a);
+    if (*p != a) throw;
+    char b = input[i + 1];
+    const char* q = std::lower_bound(lut, lut + 16, b);
+    if (*q != b) throw;
+    output.push_back(((p - lut) << 4) | (q - lut));
+  }
+  return output;
+}
+/////////////////////////
 int main()
 {
     // pt is plain text
     string pt, key, iv;
-    /*cout<<"Enter plain text(in hexadecimal): ";
-    cin>>pt;
-    cout<<"Enter key(in hexadecimal): ";
-    cin>>key;*/
+    cout<<"Enter plain text: ";
+    getline(cin, pt);
 
-    pt = "123456ABCD132536";
-    key = "AABB09182736CCDD";
-    iv = "43CF47590C68CB47";
+    while(pt.length() % 8 != 0)
+    {
+        pt+= " ";
+    }
+    cout  << pt;
+    pt = Str2Hex(pt);
+    cout << "Plain text at hex: " << pt << endl;
+    cout<<"Enter key(8 bytes): ";
+    getline(cin, key);
+    key = Str2Hex(key);
+    cout << "Key at hex: " << key << endl;
+    
+    //pt = "123456ABCD132536";
+    //key = "AABB09182736CCDD";
+    iv = "43cf47590c68cb47";
     // Key Generation
 
     // Hex to binary
@@ -375,5 +417,7 @@ int main()
     reverse(rk.begin(), rk.end());
 
     string text = decryptCBC(cipher, iv, rkb, rk);
-    cout << "\nPlain Text: " << text << endl;
+    cout << "\n Recovered plain Text: " << text << endl;
+    
+    cout << hex2String(text) << endl;
 }
