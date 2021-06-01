@@ -911,7 +911,7 @@ void AES_CCM(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
         wcout << "plain text: " << wPlain << endl;
 
         CCM<AES, TAG_SIZE>::Encryption e;
-        e.SetKeyWithIV(key, sizeof(key), iv, sizeof(iv));
+        e.SetKeyWithIV(key, keyLength, iv, sizeof(iv));
         e.SpecifyDataLengths(0, plain.size(), 0);
 
         StringSource(plain, true,
@@ -944,7 +944,7 @@ void AES_CCM(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLength)
     try
     {
         CCM<AES, TAG_SIZE>::Decryption d;
-        d.SetKeyWithIV(key, sizeof(key), iv, sizeof(iv));
+        d.SetKeyWithIV(key, keyLength, iv, sizeof(iv));
         d.SpecifyDataLengths(0, cipher.size() - TAG_SIZE, 0);
 
         AuthenticatedDecryptionFilter df(d,
@@ -984,7 +984,7 @@ void AES_CCM_Time(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLe
     {
 
         CCM<AES, TAG_SIZE>::Encryption e;
-        e.SetKeyWithIV(key, sizeof(key), iv, sizeof(iv));
+        e.SetKeyWithIV(key, keyLength, iv, sizeof(iv));
         e.SpecifyDataLengths(0, plain.size(), 0);
 
         StringSource(plain, true,
@@ -1008,7 +1008,7 @@ void AES_CCM_Time(wstring wPlain, byte key[], byte iv[], int keyLength, int ivLe
     try
     {
         CCM<AES, TAG_SIZE>::Decryption d;
-        d.SetKeyWithIV(key, sizeof(key), iv, sizeof(iv));
+        d.SetKeyWithIV(key, keyLength, iv, sizeof(iv));
         d.SpecifyDataLengths(0, cipher.size() - TAG_SIZE, 0);
 
         AuthenticatedDecryptionFilter df(d,
@@ -1399,11 +1399,11 @@ void ModeExecute()
         break;
     case 6:
         wcout << "AES Mode XTS\n";
-        AES_XTS(wPlain, key, iv, keyLength, ivLength);
+        AES_XTS(wPlain, key, iv, 32, 16);
 
         while (a < 10000)
         {
-            total += XTS_Time(wPlain, key, iv, keyLength, ivLength);
+            total += XTS_Time(wPlain, key, iv, 32, 16);
             a++;
         }
         DisplayResult(total);

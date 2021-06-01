@@ -109,7 +109,7 @@ string xor_(string a, string b)
 string encrypt(string pt, vector<string> rkb, vector<string> rk)
 {
     // Hexadecimal to binary
-    pt = hex2bin(pt);
+    // pt = hex2bin(pt);
 
     // Initial Permutation Table
     int initial_perm[64] = {58, 50, 42, 34, 26, 18, 10, 2,
@@ -237,7 +237,9 @@ string encrypt(string pt, vector<string> rkb, vector<string> rk)
                           33, 1, 41, 9, 49, 17, 57, 25};
 
     // Final Permutation
-    string cipher = bin2hex(permute(combine, final_perm, 64));
+    // string cipher = bin2hex(permute(combine, final_perm, 64));
+
+    string cipher = permute(combine, final_perm, 64);
     return cipher;
 }
 
@@ -246,41 +248,46 @@ string encryptCBC(string plain, string iv, vector<string> rkb, vector<string> rk
     string cipher;
     int count = 0;
     int begin = 0;
+    iv = hex2bin(iv);
 
     for (int i = 0; i < plain.length(); i++)
     {
         count++;
         if (count % 8 == 0)
         {
-            string temp = xor_(plain.substr(begin, 8), iv);
+            string hexTemp = hex2bin(plain.substr(begin, 8));
+            string temp = xor_(hexTemp, iv);
             cipher += encrypt(temp, rkb, rk);
             iv = cipher;
             begin = i + 1;
         }
     }
+    cipher = bin2hex(cipher);
     return cipher;
 }
 
-string decryptCBC(string plain, string iv, vector<string> rkb, vector<string> rk)
+string decryptCBC(string cipher, string iv, vector<string> rkb, vector<string> rk)
 {
     string recovered;
     int count = 0;
     int begin = 0;
+    iv = hex2bin(iv);
 
-    for (int i = 0; i < plain.length(); i++)
+    for (int i = 0; i < cipher.length(); i++)
     {
         count++;
         if (count % 8 == 0)
         {
-            string temp = plain.substr(begin, 8);
-            string block = encrypt(temp, rkb, rk);
-            cout << "\nplain: " << temp;
+            string hexTemp = hex2bin(cipher.substr(begin, 8));
+            string block = encrypt(hexTemp, rkb, rk);
+            
             recovered += xor_(block, iv);
-            iv = temp;
+            iv = hexTemp;
 
             begin = i + 1;
         }
     }
+    recovered = bin2hex(recovered);
     return recovered;
 }
 
@@ -295,7 +302,7 @@ int main()
 
     pt = "123456ABCD132536";
     key = "AABB09182736CCDD";
-    iv = "B6539B1E68199DCE";
+    iv = "43CF47590C68CB47";
     // Key Generation
 
     // Hex to binary
