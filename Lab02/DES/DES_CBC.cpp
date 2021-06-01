@@ -4,6 +4,8 @@ using namespace std;
 #include <bits/stdc++.h>
 using namespace std;
 
+#include <ctime>
+
 string hex2bin(string s)
 {
     // hexadecimal to binary conversion
@@ -106,6 +108,7 @@ string xor_(string a, string b)
     }
     return ans;
 }
+
 string encrypt(string pt, vector<string> rkb, vector<string> rk)
 {
     // Hexadecimal to binary
@@ -274,8 +277,7 @@ string decryptCBC(string cipher, string iv, vector<string> rkb, vector<string> r
     string recovered;
     int count = 0;
     int begin = 0;
-    
-    
+
     iv = hex2bin(iv);
     cipher = hex2bin(cipher);
     cout << "\ncipher: " << cipher;
@@ -287,7 +289,7 @@ string decryptCBC(string cipher, string iv, vector<string> rkb, vector<string> r
         {
             string hexTemp = cipher.substr(begin, 64);
             string block = encrypt(hexTemp, rkb, rk);
-            
+
             recovered += xor_(block, iv);
             iv = hexTemp;
 
@@ -297,7 +299,7 @@ string decryptCBC(string cipher, string iv, vector<string> rkb, vector<string> r
     recovered = bin2hex(recovered);
     return recovered;
 }
-void  toUpperCase(std::string& str)
+void toUpperCase(std::string &str)
 {
     std::transform(str.begin(), str.end(), str.begin(), ::toupper);
 }
@@ -305,50 +307,76 @@ void  toUpperCase(std::string& str)
 string Str2Hex(string str)
 {
     stringstream ss;
-    for(int i=0; i<str.length(); ++i)
+    for (int i = 0; i < str.length(); ++i)
     {
         ss << std::hex << (int)str[i];
     }
     return ss.str();
 }
 
-string hex2String(const std::string& input) {
-  static const char* const lut = "0123456789abcdef";
-  size_t len = input.length();
-  if (len & 1) throw;
-  std::string output;
-  output.reserve(len / 2);
-  for (size_t i = 0; i < len; i += 2) {
-    char a = input[i];
-    const char* p = std::lower_bound(lut, lut + 16, a);
-    if (*p != a) throw;
-    char b = input[i + 1];
-    const char* q = std::lower_bound(lut, lut + 16, b);
-    if (*q != b) throw;
-    output.push_back(((p - lut) << 4) | (q - lut));
-  }
-  return output;
+double DES_CBC_Time_Cal(string str, string iv, vector<string> rkb, vector<string> rk)
+{
+
+    int start_s = clock();
+
+    encryptCBC(str, iv, rkb, rk);
+    decryptCBC(str, iv, rkb, rk);
+
+    int stop_s = clock();
+    double etime = (stop_s - start_s) / double(CLOCKS_PER_SEC) * 1000;
+    return etime;
+}
+
+void DisplayResult(double total)
+{
+    // Display result (cipherText, total time to hash 10000 rounds and Execution time)
+    wcout << "\nTotal time for 10.000 rounds: " << total << " ms" << endl;
+    wcout << "\nExecution time: " << total / 10000 << " ms" << endl
+          << endl;
+}
+
+string hex2String(const std::string &input)
+{
+    static const char *const lut = "0123456789abcdef";
+    size_t len = input.length();
+    if (len & 1)
+        throw;
+    std::string output;
+    output.reserve(len / 2);
+    for (size_t i = 0; i < len; i += 2)
+    {
+        char a = input[i];
+        const char *p = std::lower_bound(lut, lut + 16, a);
+        if (*p != a)
+            throw;
+        char b = input[i + 1];
+        const char *q = std::lower_bound(lut, lut + 16, b);
+        if (*q != b)
+            throw;
+        output.push_back(((p - lut) << 4) | (q - lut));
+    }
+    return output;
 }
 /////////////////////////
 int main()
 {
     // pt is plain text
     string pt, key, iv;
-    cout<<"Enter plain text: ";
+    cout << "Enter plain text: ";
     getline(cin, pt);
 
-    while(pt.length() % 8 != 0)
+    while (pt.length() % 8 != 0)
     {
-        pt+= " ";
+        pt += " ";
     }
-    cout  << pt;
+    cout << pt;
+    cout << "Plain text : " << pt << endl;
     pt = Str2Hex(pt);
-    cout << "Plain text at hex: " << pt << endl;
-    cout<<"Enter key(8 bytes): ";
+
+    cout << "Enter key(8 bytes): ";
     getline(cin, key);
     key = Str2Hex(key);
-    cout << "Key at hex: " << key << endl;
-    
+
     //pt = "123456ABCD132536";
     //key = "AABB09182736CCDD";
     iv = "43cf47590c68cb47";
@@ -418,6 +446,9 @@ int main()
 
     string text = decryptCBC(cipher, iv, rkb, rk);
     cout << "\n Recovered plain Text: " << text << endl;
-    
+
     cout << hex2String(text) << endl;
+
+    double total = DES_CBC_Time_Cal(pt, iv, rkb, rk);
+    DisplayResult(total);
 }
