@@ -1,5 +1,3 @@
-#include <bits/stdc++.h>
-
 #include <iostream>
 using std::cerr;
 using std::endl;
@@ -13,11 +11,21 @@ using std::wstring;
 #include <cstdlib>
 using std::exit;
 
+#include<sstream>
+using std::stringstream;
+#include<vector>
+
 #include <fstream>
 #include <string>
-using std::stringstream;
+
+#include<iomanip>
+#include <bitset>
+
+#include<unordered_map>
 using std::unordered_map;
 using std::vector;
+
+#include <algorithm>
 
 #include <ctime>
 /* Set _setmode()*/
@@ -44,6 +52,8 @@ using std::wstring_convert;
 using std::codecvt_utf8;
 #include <sstream>
 using std::ostringstream;
+
+using namespace std;
 
 /* Functions def*/
 wstring string_to_wstring(const std::string &str);
@@ -427,6 +437,7 @@ int main()
     
     wstring wIV;
     wcout<<"Enter iv: ";
+    wcin.ignore();
     getline(wcin, wIV);
     iv = wstring_to_string(wIV);
 
