@@ -96,8 +96,15 @@ int main(int argc, char *argv[])
     cout << "Jy=" << J.y << endl;
 
     // Verify
-    ECP::Point K = curve256.GetCurve().ScalarMultiply(G, 4534); 
+    ECP::Point K = curve256.GetCurve().ScalarMultiply(G, 4534);
     cout << "Kx=" << K.x << endl;
     cout << "Ky=" << K.y << endl;
-    cout << curve256.GetCurve().Equal(J, K)<<endl;
+    cout << curve256.GetCurve().Equal(J, K) << endl;
+
+    Integer t("41058363725152142129326129780047268409114441015993725554835256314039467401291.");
+    Integer t1("41058363725152142129326129780047268409114441015993725554835256314039467401290.");
+    ECP::Point V1(0, ModularSquareRoot(t, p));
+    ECP::Point V2(0, ModularSquareRoot(t1, p) - 1);
+    cout << curve256.GetCurve().VerifyPoint(V1) << endl;
+    cout << curve256.GetCurve().VerifyPoint(V2) << endl;
 }
