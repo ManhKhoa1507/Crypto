@@ -10,4 +10,4 @@
 
 # NOTE
 
-    To get message or cipher from file create message.txt or cipher.txt 
+    To get message or cipher from file please create message.txt or cipher.txt 
