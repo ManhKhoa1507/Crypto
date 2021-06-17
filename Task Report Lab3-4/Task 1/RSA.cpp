@@ -218,7 +218,7 @@ void RSADecryption()
         wMessage = ReadFile("cipher.txt");
     }
 
-    wcout << "Ciphertext: " << wMessage << endl
+    wcout << "Ciphertext in hex: " << wMessage << endl
           << endl;
     StringSource ss(wstring_to_utf8(wMessage), true, new HexDecoder(new StringSink(cipher)));
 
