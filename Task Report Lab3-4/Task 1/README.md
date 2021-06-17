@@ -1,12 +1,12 @@
 # GUIDE
 
- 1. First build GenerateKey.cpp  
+    1. First build GenerateKey.cpp  
 
- 2. Run GenerateKey to create private and public key 
+    2. Run GenerateKey to create private and public key 
 
- 3. Build RSA.cpp 
+    3. Build RSA.cpp 
 
- 4. Run RSA 
+    4. Run RSA 
 
 # NOTE
 
