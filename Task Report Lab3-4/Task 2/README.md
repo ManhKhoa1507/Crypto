@@ -10,4 +10,4 @@
 
 # NOTE
 
-    To get message or signature from file create message.txt or signature.txt 
+    To get message or signature from file plcreate message.txt or signature.txt 
