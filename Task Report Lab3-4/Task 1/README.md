@@ -4,8 +4,6 @@
 
  2. Run GenerateKey to create private and public key 
 
-    ./GenerateKey
-
  3. Build RSA.cpp 
 
  4. Run RSA 
