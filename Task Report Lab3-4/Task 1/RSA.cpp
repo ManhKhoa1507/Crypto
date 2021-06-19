@@ -145,7 +145,7 @@ void RSAEncryption()
         //Input from screen
         wcout << "Please enter your message: ";
         fflush(stdin);
-        wcin >> wPlain;
+        getline(wcin, wPlain);
     }
     else
     {
@@ -210,7 +210,7 @@ void RSADecryption()
         //Input from screen
         wcout << "Please enter your message: ";
         fflush(stdin);
-        wcin >> wMessage;
+        getline(wcin, wMessage);
     }
     else
     {
