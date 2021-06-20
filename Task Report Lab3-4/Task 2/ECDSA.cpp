@@ -167,7 +167,7 @@ void VerifySignature()
     int stop_s = clock();
     double total = (stop_s - start_s) / double(CLOCKS_PER_SEC) * 1000;
     
-    wcout << "Verify the signature on m:" << result << endl;
+    wcout << "Verify the signature on m: " << result << endl;
     wcout << "\nTotal time for 10.000 rounds: " << total << " ms" << endl;
     wcout << "\nExecution time: " << total / 10000 << " ms" << endl
           << endl;
